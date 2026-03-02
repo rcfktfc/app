@@ -1912,31 +1912,40 @@ body.sidebar-closed .sidebar { transform: translateX(-100%); }
 }
 
 /* ================================================================== */
-/* === ИДЕАЛЬНАЯ ИЕРАРХИЯ СЛОЕВ (БЕЗ ПЕРЕКРЫТИЙ ШАПКИ) === */
+/* === ФИНАЛЬНЫЙ ФИКС СЛОЕВ: МЕНЮ ПОВЕРХ ШАПКИ И ФИКС ACCOUNT === */
 /* ================================================================== */
 
-/* 1. Снимаем агрессивные слои со всех карточек (включая Create New Entry) */
-.card, #controlPanel, .bento .card {
-    z-index: auto !important; 
-    position: relative !important;
+/* 1. Мобильное меню (Sidebar) ВСЕГДА должно быть поверх вообще всего */
+.sidebar-wrapper {
+    z-index: 999999 !important; /* Ультимативный слой для обертки меню */
 }
 
-/* 2. Приподнимаем только ту карточку, с которой работаем (чтобы её окна не прятались под соседей) */
-.bento .card:hover,
-.bento .card:focus-within {
-    z-index: 10 !important; 
+.sidebar {
+    z-index: 999999 !important; /* Ультимативный слой для самой панели меню */
 }
 
-/* 3. Шапка намертво закрепляется поверх всех карточек */
+/* 2. Жестко чиним текст "Account" для мобильных (перебиваем старые медиа-запросы) */
+.account-item span,
+.account-item .nav-text,
+.account-text {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    font-size: 16px !important;
+    margin-left: 10px !important;
+}
+
+/* 3. Усмиряем шапку, чтобы она не пробивала мобильное меню */
 .main-content header {
     z-index: 100 !important;
-    /* ВАЖНО: Этот трюк исправляет баг телефонов, 
-       заставляя шапку рендериться на отдельном 3D-слое, чтобы карточки не пробивали её */
-    transform: translateZ(1px) !important; 
+    /* Оставляем translateZ, но только если меню закрыто, 
+       чтобы меню спокойно открывалось поверх */
 }
 
-/* 4. Всплывающие окна всегда поверх всего (даже поверх шапки) */
-.modal-overlay, .rec-popover {
-    z-index: 99999 !important;
+/* Когда меню открыто (body не имеет класса sidebar-closed), 
+   опускаем шапку в самый низ, чтобы она точно не мешала */
+body:not(.sidebar-closed) .main-content header {
+    z-index: 1 !important;
+    transform: none !important;
 }
 
