@@ -719,23 +719,94 @@ async function distributeByCategories() {
 }
 
 function createAssetCard(catName, assetName, initialValue, amount, isInitialLoad, existingId) {
-    const bento = document.getElementById('portfolioBento'); if (!bento) return;
+    const bento = document.getElementById('portfolioBento');
+    if (!bento) return;
     const id = existingId || "asset-" + Math.floor(Math.random() * 1000000);
-    if (!isInitialLoad) { portfolioAssetHistory[id] = [{ date: getTimestamp(), value: parseFloat(initialValue) || 0 }]; portfolioAssetMeta[id] = { category: catName, name: assetName }; }
+    
+    if (!isInitialLoad) {
+        portfolioAssetHistory[id] = [{
+            date: getTimestamp(),
+            value: parseFloat(initialValue) || 0
+        }];
+        portfolioAssetMeta[id] = { category: catName, name: assetName };
+    }
+
     const currentGroupTotal = calculateGroupTotal(assetName);
 
-    const card = document.createElement('div'); card.className = 'card'; card.id = id;
-    card.innerHTML = `<h3 class="card-label">Category: ${catName}</h3>
-        <table class="asset-table"><thead><tr><th style="width: 35%">Asset Name</th><th style="width: 20%">Value</th><th style="width: 20%">Total Amount</th><th style="width: 25%; text-align:right">Actions</th></tr></thead>
-        <tbody><tr><td><div style="font-weight:800; font-size:18px;">${assetName}</div><div class="sub-tags-container" id="sub-tags-${id}"></div></td>
-        <td><div class="price-text" id="val-display-${id}">${parseFloat(initialValue).toFixed(2)}</div></td><td><div class="amount-text" id="amount-display-${id}">${currentGroupTotal.toFixed(2)}</div></td>
-        <td><div class="actions-cell-content"><button class="det-btn" onclick="toggleDetails('${id}')">Details</button>
-        <div class="rec-wrapper"><button class="rec-btn" onclick="event.stopPropagation(); toggleRecs('${id}')">Recommendations</button><div class="rec-popover" id="pop-${id}" onclick="event.stopPropagation()"><span class="card-label">Quick Labels</span><div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;"><button class="tag-white" onclick="addSubTag('${id}', 'HODL')">HODL</button><button class="tag-white" onclick="addSubTag('${id}', 'High Risk')">High Risk</button></div><input type="text" id="sub-tag-input-${id}" class="custom-tag-input" placeholder="+ sub-tag" onkeydown="handleSubTagInput(event, '${id}')"></div></div>
-        <div class="rec-wrapper"><button class="edit-btn" onclick="event.stopPropagation(); toggleEdit('${id}')">✎</button><div class="rec-popover" id="edit-pop-${id}" onclick="event.stopPropagation()"><span class="card-label">Update Value</span><input type="number" id="edit-input-${id}" class="custom-tag-input" style="width:100%; margin-bottom:12px;" value="" placeholder="New Value" onkeydown="if(event.key === 'Enter') { event.preventDefault(); saveAssetEdit('${id}'); }"><button class="tag-white" style="width:100%" onclick="saveAssetEdit('${id}')">Update</button></div></div>
-        <button class="del-btn" onclick="removeCard('${id}')">✕</button></div></td></tr>
-        <tr id="det-row-${id}" class="details-row"><td colspan="4"><div class="details-box"><span class="card-label">Performance Graph</span><div class="graph-container" id="graph-${id}"></div></div></td></tr></tbody></table>`;
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.id = id;
+    
+    // ИСПРАВЛЕНИЕ: Добавлена кнопка удаления (card-delete-btn) в верхний угол, а из таблицы она убрана!
+    card.innerHTML = `
+        <button class="card-delete-btn" onclick="removeCard('${id}')" title="Delete Asset">✕</button>
+        <h3 class="card-label">Category: ${catName}</h3>
+        <table class="asset-table">
+            <thead>
+                <tr>
+                    <th style="width: 35%">Asset Name</th>
+                    <th style="width: 20%">Value</th>
+                    <th style="width: 20%">Total Amount</th>
+                    <th style="width: 25%; text-align:right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div style="font-weight:800; font-size:18px;">${assetName}</div>
+                        <div class="sub-tags-container" id="sub-tags-${id}"></div>
+                    </td>
+                    <td><div class="price-text" id="val-display-${id}">${parseFloat(initialValue).toFixed(2)}</div></td>
+                    <td><div class="amount-text" id="amount-display-${id}">${currentGroupTotal.toFixed(2)}</div></td>
+                    <td>
+                        <div class="actions-cell-content">
+                            <button class="det-btn" onclick="toggleDetails('${id}')">Details</button>
+                            
+                            <div class="rec-wrapper">
+                                <button class="rec-btn" onclick="event.stopPropagation(); toggleRecs('${id}')">Recommendations</button>
+                                <div class="rec-popover" id="pop-${id}" onclick="event.stopPropagation()">
+                                    <span class="card-label">Quick Labels</span>
+                                    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+                                        <button class="tag-white" onclick="addSubTag('${id}', 'HODL')">HODL</button>
+                                        <button class="tag-white" onclick="addSubTag('${id}', 'High Risk')">High Risk</button>
+                                    </div>
+                                    <input type="text" id="sub-tag-input-${id}" class="custom-tag-input" placeholder="+ sub-tag" onkeydown="handleSubTagInput(event, '${id}')">
+                                </div>
+                            </div>
+                            
+                            <div class="rec-wrapper">
+                                <button class="edit-btn" onclick="event.stopPropagation(); toggleEdit('${id}')">✎</button>
+                                <div class="rec-popover" id="edit-pop-${id}" onclick="event.stopPropagation()">
+                                    <span class="card-label">Update Value</span>
+                                    <input type="number" id="edit-input-${id}" class="custom-tag-input" 
+                                           style="width:100%; margin-bottom:12px;" value="" placeholder="New Value"
+                                           onkeydown="if(event.key === 'Enter') { event.preventDefault(); saveAssetEdit('${id}'); }">
+                                    <button class="tag-white" style="width:100%" onclick="saveAssetEdit('${id}')">Update</button>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </td>
+                </tr>
+                <tr id="det-row-${id}" class="details-row">
+                    <td colspan="4">
+                        <div class="details-box">
+                            <span class="card-label">Performance Graph</span>
+                            <div class="graph-container" id="graph-${id}"></div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    `;
+    
     bento.appendChild(card);
-    if (!isInitialLoad) { gsap.from(card, { y: 20, opacity: 0, duration: 0.3 }); updateAllGroupTotals(assetName); }
+    
+    if (!isInitialLoad) {
+        gsap.from(card, { y: 20, opacity: 0, duration: 0.3 });
+        updateAllGroupTotals(assetName);
+    }
+    
     setTimeout(() => renderGraph(id), 100);
 }
 
