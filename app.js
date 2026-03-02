@@ -55,6 +55,17 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.classList.toggle('sidebar-closed');
         });
     });
+
+    // 4. Закрытие меню при клике на затемненный фон (для мобильных)
+    const sidebarWrapper = document.querySelector('.sidebar-wrapper');
+    if (sidebarWrapper) {
+        sidebarWrapper.addEventListener('click', function(e) {
+            // Если клик был точно по темному фону, а не по кнопкам внутри меню
+            if (e.target === sidebarWrapper) {
+                document.body.classList.add('sidebar-closed');
+            }
+        });
+    }
 });
 
 // =================================================================
