@@ -1527,6 +1527,27 @@ body.sidebar-closed .sidebar { transform: translateX(-100%); }
 /* === MEDIA QUERIES (RESPONSIVE) === */
 /* ================================================================== */
 
+/* === УЛУЧШЕННЫЙ КРЕСТИК УДАЛЕНИЯ КАТЕГОРИИ === */
+.remove-tag-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 10px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    color: rgba(255, 255, 255, 0.5);
+    transition: all 0.2s ease;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.remove-tag-btn:hover,
+.remove-tag-btn:active {
+    background-color: rgba(255, 69, 58, 0.2);
+    color: var(--loss-red);
+}
+
 @media (max-width: 1300px) {
     :root { --sidebar-width: 80px; }
     .sidebar { padding: 40px 0; align-items: center; }

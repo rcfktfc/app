@@ -733,18 +733,18 @@ function renderGlobalTags() {
     if (!container) return;
     container.innerHTML = globalSelectedTags.map((t, index) => {
         // Если цена не введена (пусто), визуально показываем $0.00
-        const displayPrice = t.price ? `$${t.price}` : '$0.00'; 
-        
+        const displayPrice = t.price ? `$${t.price}` : '$0.00';
+
         return `
         <div class="rec-wrapper" style="display:inline-block; margin-right:8px; margin-bottom:8px;">
             <div class="pill" style="background: rgba(255,255,255,0.05); border-color: #fff;" onclick="event.stopPropagation(); togglePricePop(${index})">
                 ${t.name} <span style="font-size:10px; opacity:0.6; margin-left:6px;">${displayPrice}</span>
-                <span style="margin-left:10px;" onclick="event.stopPropagation(); removeGlobalTag('${t.name}')">✕</span>
+                <!-- ИСПРАВЛЕНИЕ: Новый удобный крестик с классом remove-tag-btn -->
+                <span class="remove-tag-btn" onclick="event.stopPropagation(); removeGlobalTag('${t.name}')">✕</span>
             </div>
             <div class="rec-popover" id="price-pop-${index}" onclick="event.stopPropagation()">
                 <span class="card-label">Set Value for ${t.name}</span>
-                <!-- ИСПРАВЛЕНИЕ: Добавлен обработчик onkeydown для клавиши Enter -->
-                <input type="number" id="input-price-${index}" class="custom-tag-input" 
+                <input type="number" id="input-price-${index}" class="custom-tag-input"
                        style="width:100%; margin-bottom:12px;" value="${t.price}" placeholder="0.00"
                        onkeydown="if(event.key === 'Enter') { event.preventDefault(); savePrice(${index}); }">
                 <button class="tag-white" style="width:100%" onclick="savePrice(${index})">Save Value</button>
@@ -775,8 +775,11 @@ function savePrice(index) {
 }
 
 function removeGlobalTag(name) {
-    globalSelectedTags = globalSelectedTags.filter(t => t.name !== name);
-    renderGlobalTags();
+    // ИСПРАВЛЕНИЕ: Спрашиваем разрешение перед удалением тега
+    if (confirm(`Remove category "${name}"?`)) {
+        globalSelectedTags = globalSelectedTags.filter(t => t.name !== name);
+        renderGlobalTags();
+    }
 }
 
 function distributeByCategories() {
@@ -924,7 +927,12 @@ function closeAllPops() {
 }
 
 function removeCard(id) {
-    const assetName = portfolioAssetMeta[id] ? portfolioAssetMeta[id].name : null;
+    const assetName = portfolioAssetMeta[id] ? portfolioAssetMeta[id].name : 'this asset';
+    
+    // ИСПРАВЛЕНИЕ: Спрашиваем разрешение перед удалением большой карточки
+    if (!confirm(`Are you sure you want to delete "${assetName}"? This action cannot be undone.`)) {
+        return; // Если пользователь нажал "Отмена", прерываем функцию
+    }
     
     delete portfolioAssetHistory[id];
     delete portfolioAssetMeta[id];
