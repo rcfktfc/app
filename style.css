@@ -31,8 +31,38 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-html, body { width: 100%; background: var(--bg); color: #fff; scroll-behavior: smooth; overflow-x: hidden; }
-body { display: flex; min-height: 100vh; overflow-x: hidden; }
+
+/* === ПРАВИЛЬНЫЙ ФУНДАМЕНТ ДЛЯ ПРИЛИПАЮЩЕЙ ШАПКИ === */
+html, body { 
+    width: 100%; 
+    background: var(--bg); 
+    color: #fff; 
+    scroll-behavior: smooth; 
+    margin: 0; 
+    padding: 0; 
+    /* ВАЖНО: Запрещаем скролл всей страницы, чтобы не ломался sticky */
+    overflow: hidden; 
+}
+
+body { 
+    display: flex; 
+    height: 100vh; 
+}
+
+.app-container { 
+    display: flex; 
+    width: 100%; 
+    height: 100vh; 
+}
+
+/* ВАЖНО: Разрешаем скролл ТОЛЬКО контейнеру с контентом */
+#content {
+    flex: 1;
+    min-width: 0;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
 
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
@@ -1761,42 +1791,38 @@ body.sidebar-closed .sidebar { transform: translateX(-100%); }
 }
 
 /* ================================================================== */
-/* === ПРИЛИПАЮЩАЯ ШАПКА (STICKY HEADER) ДЛЯ ВСЕХ СТРАНИЦ === */
+/* === ПРИЛИПАЮЩАЯ ШАПКА (ИСПРАВЛЕНО) === */
 /* ================================================================== */
-
-/* Убираем стандартный отступ сверху, переносим его в шапку */
-.main-content, 
-#page-main .main-content, 
-#page-portfolio .main-content, 
-#page-analytics .main-content, 
-#page-account .main-content, 
-#page-settings .main-content {
-    padding-top: 0 !important;
+.main-content {
+    /* Убираем отступ сверху, оставляем только по бокам и снизу */
+    padding: 0 5% 60px 5% !important; 
 }
 
-/* Делаем шапку липкой с эффектом стекла (blur) */
 .main-content header {
-    position: sticky;
-    top: 0;
-    z-index: 1500;
-    background: rgba(5, 5, 5, 0.85); /* Цвет фона с легкой прозрачностью */
-    backdrop-filter: blur(16px);     /* Размытие того, что прокручивается под ней */
-    -webkit-backdrop-filter: blur(16px);
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1500 !important;
+    background: rgba(5, 5, 5, 0.85) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
     
-    /* Растягиваем шапку от края до края */
-    padding: 30px 5% 20px 5%;
-    margin-left: -5%;
-    margin-right: -5%;
-    margin-bottom: 30px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    /* Шапка расширяется на всю ширину и перекрывает контент */
+    margin-left: -5% !important;
+    margin-right: -5% !important;
+    padding: 30px 5% 20px 5% !important;
+    margin-bottom: 30px !important;
+    
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
 }
 
-/* Корректируем отступы шапки специально для телефонов */
 @media (max-width: 900px) {
+    .main-content {
+        padding: 0 20px 40px 20px !important;
+    }
     .main-content header {
-        padding: 20px 20px 15px 20px;
-        margin-left: -20px;
-        margin-right: -20px;
+        margin-left: -20px !important;
+        margin-right: -20px !important;
+        padding: 20px 20px 15px 20px !important;
     }
 }
 

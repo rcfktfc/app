@@ -19,7 +19,6 @@
                     <div class="logo"><div class="logo-box"></div><span>FiMax</span></div>
                 </div>
                 
-                <!-- ОБРАТИ ВНИМАНИЕ: Здесь теперь data-page вместо href -->
                 <nav class="nav-group">
                     <div class="nav-item nav-link active" data-page="main">
                         <div style="display:flex; align-items:center; gap:12px; width:100%;">Dashboard</div>
@@ -33,14 +32,15 @@
                     <div class="nav-item nav-link" data-page="settings">
                         <div style="display:flex; align-items:center; gap:12px; width:100%;">Settings</div>
                     </div>
+                    <!-- ИСПРАВЛЕНИЕ: Вкладка Account теперь здесь, как и все остальные! -->
+                    <div class="nav-item nav-link account-item" data-page="account">
+                        <div style="display:flex; align-items:center; gap:12px; width:100%;">
+                            <div class="avatar-mini" style="margin:0;"></div><span>Account</span>
+                        </div>
+                    </div>
                 </nav>
 
                 <div class="sidebar-footer">
-                    <div class="account-tab">
-                        <div class="nav-item account-item nav-link" data-page="account" style="width: 100%;">
-                            <div class="avatar-mini"></div><span>Account</span>
-                        </div>
-                    </div>
                     <div class="version-text">V.2025.02</div>
                 </div>
             </aside>

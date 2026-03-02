@@ -25,7 +25,7 @@ window.AppStorage = {
                     window.Telegram.WebApp.CloudStorage.setItem(key + '_' + idx, chunk, (err2) => {
                         if (err2) reject(err2);
                         saved++;
-                        if (saved === chunks.length) resolve(); // Все куски успешно загружены в облако
+                        if (saved === chunks.length) resolve(); // Все куски успешно загружены
                     });
                 });
             });
@@ -39,7 +39,7 @@ window.AppStorage = {
             window.Telegram.WebApp.CloudStorage.getItem(key + '_meta', (err, metaStr) => {
                 if (err) return reject(err);
                 
-                // Если меты нет, возможно это старые неразбитые данные или их вообще нет
+                // Если меты нет, возможно это старые данные или их вообще нет
                 if (!metaStr) {
                     window.Telegram.WebApp.CloudStorage.getItem(key, (err3, oldVal) => {
                         resolve(oldVal || null);
@@ -82,6 +82,9 @@ window.AppStorage = {
     }
 };
 
+// =================================================================
+// === ИНИЦИАЛИЗАЦИЯ TELEGRAM И РОУТЕР (МЕНЮ) ===
+// =================================================================
 document.addEventListener('DOMContentLoaded', function() {
     if (window.Telegram && window.Telegram.WebApp) {
         const tg = window.Telegram.WebApp;
@@ -206,7 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${day}.${month}`;
     }
 
-    // ТЕПЕРЬ ФУНКЦИЯ ЗАГРУЗКИ АСИНХРОННАЯ
     async function loadData() {
         try {
             const portfolioDataRaw = await AppStorage.get('portfolioData');
@@ -290,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderAnalytics() {
         const { kpiData, aggregatedHistory, assetPerformance } = processData(activeTimeframe);
         if ((!kpiData.totalValue && kpiData.totalValue !== 0) || Object.keys(kpiData).length === 0) {
-            mainChartContainer.innerHTML = '<p style="text-align:center; color: var(--text-sec); padding-top: 50px;">Check console for errors.</p>';
+            mainChartContainer.innerHTML = '<p style="text-align:center; color: var(--text-sec); padding-top: 50px;">No data to display.</p>';
             return;
         }
         
@@ -389,12 +391,10 @@ const pieSelectorContainer = document.getElementById('pie-selector-container');
 const trendPath = document.getElementById('trend-path');
 const hintText = document.getElementById('hint-text');
 
-// АСИНХРОННОЕ СОХРАНЕНИЕ
 async function saveMainData() {
     await AppStorage.set('fiMaxPies', JSON.stringify({ pies, activePieId }));
 }
 
-// АСИНХРОННАЯ ЗАГРУЗКА
 async function loadMainData() {
     const pieData = await AppStorage.get('fiMaxPies');
     if (pieData) {
@@ -616,7 +616,6 @@ let globalSelectedTags = [];
 let portfolioAssetHistory = {}; 
 let portfolioAssetMeta = {}; 
 
-// АСИНХРОННОЕ СОХРАНЕНИЕ PORTFOLIO
 async function saveDataToCloud() {
     try {
         const dataToSave = { assetHistory: portfolioAssetHistory, assetMeta: portfolioAssetMeta };
@@ -624,7 +623,6 @@ async function saveDataToCloud() {
     } catch (e) { console.error("Ошибка сохранения в облако:", e); }
 }
 
-// АСИНХРОННАЯ ЗАГРУЗКА PORTFOLIO
 async function loadDataFromCloud() {
     try {
         const savedData = await AppStorage.get('portfolioData');
@@ -803,12 +801,16 @@ document.addEventListener('pageOpened', async (e) => {
 });
 
 // =================================================================
-// === СТРАНИЦА SETTINGS ===
+// === СТРАНИЦА SETTINGS (ПРОМОКОДЫ И НАСТРОЙКИ) ===
 // =================================================================
 document.addEventListener('DOMContentLoaded', () => {
     const currencySelect = document.getElementById('currency-select');
     const notificationToggles = document.querySelectorAll('.notification-toggle');
     const clearDataBtn = document.getElementById('clear-data-btn');
+    
+    // Элементы для промокодов возвращены!
+    const promoCodeInput = document.getElementById('promo-code-input');
+    const applyPromoBtn = document.getElementById('apply-promo-btn');
 
     let settings = {};
 
@@ -821,6 +823,23 @@ document.addEventListener('DOMContentLoaded', () => {
     
     async function saveSettings() {
         await AppStorage.set('appSettings', JSON.stringify(settings));
+    }
+
+    // ЛОГИКА ПРОМОКОДОВ ВОЗВРАЩЕНА!
+    function applyPromoCode() {
+        if(!promoCodeInput) return;
+        const code = promoCodeInput.value.trim().toUpperCase();
+        if (!code) {
+            alert('Please enter a promo code.');
+            return;
+        }
+        const validCodes = ['PRO100', 'SAVE20', 'SPECIAL'];
+        if (validCodes.includes(code)) {
+            alert(`✅ Promo code "${code}" applied successfully!`);
+        } else {
+            alert(`❌ Invalid promo code.`);
+        }
+        promoCodeInput.value = '';
     }
 
     if(currencySelect) {
@@ -847,6 +866,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 location.reload();
             }
         });
+    }
+
+    // Подключаем слушатель на кнопку промокода
+    if(applyPromoBtn) {
+        applyPromoBtn.addEventListener('click', applyPromoCode);
     }
 
     loadSettings();
