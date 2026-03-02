@@ -714,7 +714,9 @@ function updateDashboard() {
 
 function selectTag(name) {
     if (!globalSelectedTags.find(t => t.name === name)) {
-        globalSelectedTags.push({ name: name, price: "0" });
+        // ИСПРАВЛЕНИЕ: Теперь вместо "0" мы передаем пустую строку "", 
+        // чтобы в инпуте не было лишнего нуля.
+        globalSelectedTags.push({ name: name, price: "" }); 
         renderGlobalTags();
     }
 }
@@ -729,31 +731,47 @@ function handleTagInput(e) {
 function renderGlobalTags() {
     const container = document.getElementById('activeTags');
     if (!container) return;
-    container.innerHTML = globalSelectedTags.map((t, index) => `
+    container.innerHTML = globalSelectedTags.map((t, index) => {
+        // Если цена не введена (пусто), визуально показываем $0.00
+        const displayPrice = t.price ? `$${t.price}` : '$0.00'; 
+        
+        return `
         <div class="rec-wrapper" style="display:inline-block; margin-right:8px; margin-bottom:8px;">
             <div class="pill" style="background: rgba(255,255,255,0.05); border-color: #fff;" onclick="event.stopPropagation(); togglePricePop(${index})">
-                ${t.name} <span style="font-size:10px; opacity:0.6; margin-left:6px;">$${t.price}</span>
+                ${t.name} <span style="font-size:10px; opacity:0.6; margin-left:6px;">${displayPrice}</span>
                 <span style="margin-left:10px;" onclick="event.stopPropagation(); removeGlobalTag('${t.name}')">✕</span>
             </div>
             <div class="rec-popover" id="price-pop-${index}" onclick="event.stopPropagation()">
                 <span class="card-label">Set Value for ${t.name}</span>
+                <!-- ИСПРАВЛЕНИЕ: Добавлен обработчик onkeydown для клавиши Enter -->
                 <input type="number" id="input-price-${index}" class="custom-tag-input" 
-                       style="width:100%; margin-bottom:12px;" value="${t.price}" placeholder="0.00">
+                       style="width:100%; margin-bottom:12px;" value="${t.price}" placeholder="0.00"
+                       onkeydown="if(event.key === 'Enter') { event.preventDefault(); savePrice(${index}); }">
                 <button class="tag-white" style="width:100%" onclick="savePrice(${index})">Save Value</button>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function togglePricePop(index) {
     document.querySelectorAll('.rec-popover').forEach(p => p.classList.remove('active'));
     document.getElementById(`price-pop-${index}`).classList.add('active');
+    
+    // ИСПРАВЛЕНИЕ: Автоматически ставим курсор (фокус) в поле ввода при открытии
+    setTimeout(() => {
+        const input = document.getElementById(`input-price-${index}`);
+        if(input) input.focus();
+    }, 50);
 }
 
 function savePrice(index) {
     const val = document.getElementById(`input-price-${index}`).value;
-    globalSelectedTags[index].price = val || "0";
+    globalSelectedTags[index].price = val; // Сохраняем введенное значение
     renderGlobalTags();
+    
+    // ИСПРАВЛЕНИЕ: Закрываем всплывающее окно после сохранения!
+    closeAllPops(); 
 }
 
 function removeGlobalTag(name) {

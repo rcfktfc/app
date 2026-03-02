@@ -1697,7 +1697,6 @@ body.sidebar-closed .sidebar { transform: translateX(-100%); }
     #page-portfolio .card { padding: 20px; border-radius: 20px; }
     #page-portfolio .add-row { flex-direction: column; align-items: stretch; }
     #page-portfolio .inline-input { width: 100%; }
-    #page-portfolio .rec-popover { position: absolute; right: 0; left: auto; width: 260px; max-width: 85vw; }
     #page-portfolio .dashboard-stats { gap: 12px; }
     #page-portfolio .stat-main { width: 100%; }
     #page-portfolio .stat-categories { width: 100%; }
@@ -1706,6 +1705,20 @@ body.sidebar-closed .sidebar { transform: translateX(-100%); }
     #page-settings .promo-code-input-group { flex-direction: column; }
     #page-settings .white-btn { width: 100%; }
     #page-settings .form-grid { grid-template-columns: 1fr; }
+    
+    /* === ИСПРАВЛЕНИЕ: Всплывающие окна по центру экрана на телефонах === */
+    #page-portfolio .rec-popover {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        width: 90% !important;
+        max-width: 320px !important;
+        z-index: 9999 !important;
+        /* Этот трюк с тенью создает эффект затемнения всего остального экрана вокруг окошка */
+        box-shadow: 0 0 0 2000px rgba(0,0,0,0.8), 0 20px 40px rgba(0,0,0,0.5) !important;
+        border-radius: 24px !important;
+    }
 }
 
 @media (max-width: 600px) {
