@@ -114,8 +114,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (emailLabel && emailLabel.tagName.toLowerCase() === 'LABEL') emailLabel.textContent = 'Telegram Username';
             }
 
-            const sidebarAccountSpan = document.querySelector('.account-item span');
-            if (sidebarAccountSpan) sidebarAccountSpan.textContent = firstName || 'Account';
+            const sidebarAccountSpan = document.querySelector('.account-text');
+            if (sidebarAccountSpan) {
+                // Если имя есть - пишем его, если пустое - пишем "Account"
+                sidebarAccountSpan.textContent = firstName.trim() ? firstName.trim() : 'Account';
+            }
 
             if (photoUrl) {
                 const avatars = document.querySelectorAll('.big-avatar, .avatar-mini');
