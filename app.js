@@ -849,15 +849,17 @@ function createAssetCard(catName, assetName, initialValue, amount, isInitialLoad
                                         <button class="tag-white" onclick="addSubTag('${id}', 'HODL')">HODL</button>
                                         <button class="tag-white" onclick="addSubTag('${id}', 'High Risk')">High Risk</button>
                                     </div>
-                                    <input type="text" class="custom-tag-input" placeholder="+ sub-tag" onkeydown="handleSubTagInput(event, '${id}')">
+                                    <input type="text" id="sub-tag-input-${id}" class="custom-tag-input" placeholder="+ sub-tag" onkeydown="handleSubTagInput(event, '${id}')">
                                 </div>
                             </div>
                             <div class="rec-wrapper">
                                 <button class="edit-btn" onclick="event.stopPropagation(); toggleEdit('${id}')">✎</button>
                                 <div class="rec-popover" id="edit-pop-${id}" onclick="event.stopPropagation()">
                                     <span class="card-label">Update Value</span>
+                                    <!-- ИСПРАВЛЕНИЕ: Добавлен onkeydown для Enter -->
                                     <input type="number" id="edit-input-${id}" class="custom-tag-input" 
-                                           style="width:100%; margin-bottom:12px;" value="${initialValue}" placeholder="New Value">
+                                           style="width:100%; margin-bottom:12px;" value="${initialValue}" placeholder="New Value (e.g. 500)"
+                                           onkeydown="if(event.key === 'Enter') { event.preventDefault(); saveAssetEdit('${id}'); }">
                                     <button class="tag-white" style="width:100%" onclick="saveAssetEdit('${id}')">Update</button>
                                 </div>
                             </div>
@@ -897,11 +899,24 @@ function toggleDetails(id) {
 function toggleRecs(id) {
     closeAllPops();
     document.getElementById(`pop-${id}`).classList.add('active');
+    // Ставим фокус в поле тегов
+    setTimeout(() => {
+        const input = document.getElementById(`sub-tag-input-${id}`);
+        if(input) input.focus();
+    }, 50);
 }
 
 function toggleEdit(id) {
     closeAllPops();
     document.getElementById(`edit-pop-${id}`).classList.add('active');
+    // Ставим фокус в поле новой суммы и очищаем его от старого значения для удобства
+    setTimeout(() => {
+        const input = document.getElementById(`edit-input-${id}`);
+        if(input) {
+            input.value = ''; // Очищаем поле (останется только placeholder)
+            input.focus();
+        }
+    }, 50);
 }
 
 function closeAllPops() {
