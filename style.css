@@ -1759,3 +1759,44 @@ body.sidebar-closed .sidebar { transform: translateX(-100%); }
     #page-portfolio .total-balance { font-size: 32px; }
     #page-settings h1 { font-size: 32px; }
 }
+
+/* ================================================================== */
+/* === ПРИЛИПАЮЩАЯ ШАПКА (STICKY HEADER) ДЛЯ ВСЕХ СТРАНИЦ === */
+/* ================================================================== */
+
+/* Убираем стандартный отступ сверху, переносим его в шапку */
+.main-content, 
+#page-main .main-content, 
+#page-portfolio .main-content, 
+#page-analytics .main-content, 
+#page-account .main-content, 
+#page-settings .main-content {
+    padding-top: 0 !important;
+}
+
+/* Делаем шапку липкой с эффектом стекла (blur) */
+.main-content header {
+    position: sticky;
+    top: 0;
+    z-index: 1500;
+    background: rgba(5, 5, 5, 0.85); /* Цвет фона с легкой прозрачностью */
+    backdrop-filter: blur(16px);     /* Размытие того, что прокручивается под ней */
+    -webkit-backdrop-filter: blur(16px);
+    
+    /* Растягиваем шапку от края до края */
+    padding: 30px 5% 20px 5%;
+    margin-left: -5%;
+    margin-right: -5%;
+    margin-bottom: 30px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Корректируем отступы шапки специально для телефонов */
+@media (max-width: 900px) {
+    .main-content header {
+        padding: 20px 20px 15px 20px;
+        margin-left: -20px;
+        margin-right: -20px;
+    }
+}
+

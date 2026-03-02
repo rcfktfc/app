@@ -1,9 +1,62 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Инициализация Telegram
+    // 1. Инициализация Telegram и получение данных профиля
     if (window.Telegram && window.Telegram.WebApp) {
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
+
+        // === ИНТЕГРАЦИЯ ДАННЫХ ИЗ TELEGRAM ===
+        const tgUser = tg.initDataUnsafe?.user;
+        
+        if (tgUser) {
+            // Собираем Имя и Фамилию
+            const firstName = tgUser.first_name || '';
+            const lastName = tgUser.last_name || '';
+            const fullName = `${firstName} ${lastName}`.trim() || 'Telegram User';
+            
+            // Собираем Юзернейм (с собачкой)
+            const username = tgUser.username ? `@${tgUser.username}` : 'No username';
+            
+            // Ссылка на аватарку
+            const photoUrl = tgUser.photo_url; 
+
+            // --- 1. Обновляем страницу Account ---
+            const profileNameEl = document.querySelector('.profile-name');
+            if (profileNameEl) profileNameEl.textContent = fullName;
+
+            const profileEmailEl = document.querySelector('.profile-email');
+            if (profileEmailEl) profileEmailEl.textContent = username;
+
+            // --- 2. Обновляем страницу Settings ---
+            const fullNameInput = document.getElementById('full-name');
+            if (fullNameInput) fullNameInput.value = fullName;
+
+            const emailInput = document.getElementById('email');
+            if (emailInput) {
+                emailInput.value = username;
+                emailInput.type = "text"; // Меняем тип с email на text, так как это юзернейм
+                
+                // Находим текст "Email Address" над инпутом и меняем его на "Telegram Username"
+                const emailLabel = emailInput.previousElementSibling;
+                if (emailLabel && emailLabel.tagName.toLowerCase() === 'LABEL') {
+                    emailLabel.textContent = 'Telegram Username';
+                }
+            }
+
+            // --- 3. Обновляем имя в меню слева ---
+            const sidebarAccountSpan = document.querySelector('.account-item span');
+            if (sidebarAccountSpan) sidebarAccountSpan.textContent = firstName || 'Account';
+
+            // --- 4. Устанавливаем Аватарку (если есть) ---
+            if (photoUrl) {
+                const avatars = document.querySelectorAll('.big-avatar, .avatar-mini');
+                avatars.forEach(avatar => {
+                    avatar.style.backgroundImage = `url(${photoUrl})`;
+                    avatar.style.backgroundSize = 'cover';
+                    avatar.style.backgroundPosition = 'center';
+                });
+            }
+        }
     }
 
     // 2. Улучшенный роутер (Переключение страниц)
