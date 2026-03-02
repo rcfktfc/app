@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FiMax App</title>
+    <!-- Подключаем Telegram API и нужные скрипты -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- ЕДИНЫЙ САЙДБАР ДЛЯ ВСЕХ СТРАНИЦ -->
+        <div class="sidebar-wrapper">
+            <aside class="sidebar">
+                <div class="sidebar-brand">
+                    <div class="logo"><div class="logo-box"></div><span>FiMax</span></div>
+                </div>
+                
+                <!-- ОБРАТИ ВНИМАНИЕ: Здесь теперь data-page вместо href -->
+                <nav class="nav-group">
+                    <div class="nav-item nav-link active" data-page="main">
+                        <div style="display:flex; align-items:center; gap:12px; width:100%;">Dashboard</div>
+                    </div>
+                    <div class="nav-item nav-link" data-page="portfolio">
+                        <div style="display:flex; align-items:center; gap:12px; width:100%;">Portfolio</div>
+                    </div>
+                    <div class="nav-item nav-link" data-page="analytics">
+                        <div style="display:flex; align-items:center; gap:12px; width:100%;">Analytics</div>
+                    </div>
+                    <div class="nav-item nav-link" data-page="settings">
+                        <div style="display:flex; align-items:center; gap:12px; width:100%;">Settings</div>
+                    </div>
+                </nav>
+
+                <div class="sidebar-footer">
+                    <div class="account-tab">
+                        <div class="nav-item account-item nav-link" data-page="account" style="width: 100%;">
+                            <div class="avatar-mini"></div><span>Account</span>
+                        </div>
+                    </div>
+                    <div class="version-text">V.2025.02</div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- КОНТЕЙНЕР ДЛЯ СТРАНИЦ (занимает всё свободное место) -->
+        <main id="content" style="flex: 1; min-width: 0;">
+            
+            <!-- 1. СТРАНИЦА MAIN (Dashboard) -->
+            <div id="page-main" class="page active">
+                <!-- Модалки -->
+                <div class="modal-overlay" id="modalAddPie">
+                    <div class="modal-card">
+                        <h2 style="margin-bottom: 25px; letter-spacing: -1px;">Create New Pie</h2>
+                        <input type="text" class="modal-input" id="new-pie-name" placeholder="Pie Name (e.g., My Portfolio)">
+                        <div style="display: flex; gap: 15px; margin-top: 10px;">
+                            <button class="btn-add secondary" onclick="closeModal('modalAddPie')">Cancel</button>
+                            <button class="btn-add blue-btn" id="confirm-add-pie">Confirm</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-overlay" id="modalAddAsset">
+                    <div class="modal-card">
+                        <h2 style="margin-bottom: 25px; letter-spacing: -1px;">Add Asset to Pie</h2>
+                        <p style="color: var(--text-sec); margin-bottom: 20px;">Select an asset from your Portfolio.</p>
+                        <div class="asset-selection-list" id="asset-selection-list"></div>
+                        <div style="display: flex; gap: 15px; margin-top: 25px;">
+                            <button class="btn-add secondary" style="width: 100%;" onclick="closeModal('modalAddAsset')">Close</button>
+                        </div>
+                    </div>
+                </div>
+
+                <main class="main-content">
+                    <header>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <button class="sidebar-toggle-btn menu-btn">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                            </button>
+                            <h1 id="main-header" style="margin-bottom: 0;">Equity</h1>
+                        </div>
+                        <button class="btn-add" id="openAddPieModal">+ Add Pie</button>
+                    </header>
+                    <div class="pie-selector-container" id="pie-selector-container"></div>
+                    <div class="bento">
+                        <div class="card col-7">
+                            <div class="pie-wrapper">
+                                <div class="total-amount-center">
+                                    <h3 id="hover-category-name">Total Balance</h3>
+                                    <div id="display-amount">$0</div>
+                                </div>
+                                <svg viewBox="-120 -120 240 240" class="pie-svg" id="pie-svg-container">
+                                    <defs>
+                                        <filter id="glass-depth">
+                                            <feGaussianBlur in="SourceAlpha" stdDeviation="1" result="blur" />
+                                            <feSpecularLighting in="blur" surfaceScale="2" specularConstant="1" specularExponent="40" lighting-color="#ffffff" result="specOut">
+                                                <fePointLight x="-50" y="-100" z="200" />
+                                            </feSpecularLighting>
+                                            <feComposite in="specOut" in2="SourceAlpha" operator="in" />
+                                            <feComposite in="SourceGraphic" operator="arithmetic" k2="1" k3="0.5" />
+                                        </filter>
+                                    </defs>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="card col-5">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h3 style="margin-bottom: 0;">Breakdown</h3>
+                                <button class="btn-add" id="openAddAssetModal" style="padding: 10px 16px; font-size: 12px;">+ Add Asset</button>
+                            </div>
+                            <div class="asset-list" id="breakdown-list"></div>
+                            <div class="hint-box">
+                                <p class="hint-text" id="hint-text">Your portfolio is looking good.</p>
+                                <svg class="sparkline-svg" viewBox="0 0 200 50" preserveAspectRatio="none">
+                                    <path id="trend-path" class="trend-path" d="M5,45 L195,45" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="card col-4"><div class="card-title">Market Pulse</div></div>
+                        <div class="card col-4"><div class="card-title"><div class="ai-badge">✦</div> Smart Insight</div></div>
+                        <div class="card col-4 perf-gradient"><div class="card-title">Performance</div><div class="perf-val">+12.4%</div></div>
+                    </div>
+                </main>
+            </div>
+
+            <!-- 2. СТРАНИЦА PORTFOLIO -->
+            <div id="page-portfolio" class="page">
+                <main class="main-content">
+                    <header>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <button class="sidebar-toggle-btn menu-btn">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                            </button>
+                            <h1 style="margin-bottom: 0;">Portfolio</h1>
+                        </div>
+                    </header>
+
+                    <div id="dashboard-stats" class="dashboard-stats">
+                        <div class="stat-main">
+                            <span class="stat-label">Total Balance</span>
+                            <div class="total-balance" id="globalTotalDisplay">$0.00</div>
+                        </div>
+                        <div class="stat-categories" id="categoryBreakdown"></div>
+                    </div>
+
+                    <div class="bento" id="portfolioBento">
+                        <div class="card" id="controlPanel" style="z-index: 2001;">
+                            <span class="card-label">Create New Entry</span>
+                            <div class="add-row">
+                                <input type="text" id="newAssetName" class="inline-input" placeholder="Asset Name" style="flex: 2;">
+                                <input type="number" id="newAssetAmount" class="inline-input" placeholder="Total Amount (Limit)">
+                                <button class="white-btn" onclick="distributeByCategories()">Distribute Assets</button>
+                            </div>
+                            <div class="category-pills" id="recommendedTags">
+                                <div class="pill" onclick="selectTag('Crypto')">Crypto <span>+</span></div>
+                                <div class="pill" onclick="selectTag('Stocks')">Stocks <span>+</span></div>
+                                <div class="pill" onclick="selectTag('Real Estate')">Real Estate <span>+</span></div>
+                                <div class="pill" onclick="selectTag('Gold')">Gold <span>+</span></div>
+                                <div class="rec-wrapper">
+                                    <input type="text" class="pill" placeholder="+ add category" onkeydown="handleTagInput(event)">
+                                </div>
+                            </div>
+                            <div class="category-pills" id="activeTags" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px;"></div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+
+            <!-- 3. СТРАНИЦА ANALYTICS -->
+            <div id="page-analytics" class="page">
+                <main class="main-content">
+                    <header class="analytics-header">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <button class="sidebar-toggle-btn menu-btn">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                            </button>
+                            <h1 style="margin-bottom: 0;">Analytics</h1>
+                        </div>
+                        <div class="time-filter">
+                            <button class="time-filter-btn active" data-days="7">7D</button>
+                            <button class="time-filter-btn" data-days="30">30D</button>
+                            <button class="time-filter-btn" data-days="90">90D</button>
+                            <button class="time-filter-btn" data-days="365">1Y</button>
+                            <button class="time-filter-btn" data-days="0">ALL</button>
+                        </div>
+                    </header>
+
+                    <div id="analytics-content">
+                        <div class="kpi-grid">
+                            <div class="kpi-card"><span class="card-label">Portfolio Value</span><div class="kpi-value" id="kpi-total-value">$0.00</div></div>
+                            <div class="kpi-card"><span class="card-label">Overall Gain/Loss</span><div class="kpi-value" id="kpi-gain-loss">$0.00</div><div class="kpi-sub" id="kpi-gain-loss-percent">(0.00%)</div></div>
+                            <div class="kpi-card"><span class="card-label">Best Performer</span><div class="kpi-value" id="kpi-best-performer">N/A</div><div class="kpi-sub green" id="kpi-best-performer-change">+$0.00</div></div>
+                            <div class="kpi-card"><span class="card-label">Worst Performer</span><div class="kpi-value" id="kpi-worst-performer">N/A</div><div class="kpi-sub red" id="kpi-worst-performer-change">-$0.00</div></div>
+                        </div>
+
+                        <div class="card chart-card">
+                            <span class="card-label">Total Portfolio Performance</span>
+                            <div class="graph-container" id="main-performance-chart" style="height: 350px;"></div>
+                        </div>
+
+                        <div class="bento" style="margin-top: 24px;">
+                            <div class="card">
+                                <span class="card-label">Asset Performance</span>
+                                <div class="asset-performance-table-wrapper">
+                                    <table class="asset-performance-table">
+                                        <thead><tr><th>Asset</th><th>Category</th><th>Value</th><th>Change ($)</th><th>Change (%)</th></tr></thead>
+                                        <tbody id="asset-performance-tbody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="no-data-message" style="display: none; text-align: center; padding: 100px 20px;">
+                        <h2 style="font-size: 24px; margin-bottom: 10px;">No Analytics Data Found</h2>
+                        <p style="color: var(--text-sec);">Please go to the "Portfolio" page and add some assets to see your analytics.</p>
+                    </div>
+                </main>
+            </div>
+
+            <!-- 4. СТРАНИЦА ACCOUNT -->
+            <div id="page-account" class="page">
+                <main class="main-content">
+                    <header>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <button class="sidebar-toggle-btn menu-btn">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                            </button>
+                            <h1 style="margin-bottom: 0;">Account</h1>
+                        </div>
+                    </header>
+
+                    <div class="account-profile-card">
+                        <div class="big-avatar"></div>
+                        <div class="profile-info">
+                            <h2 class="profile-name">Fivaje5627</h2>
+                            <p class="profile-email">fivaje5627@gavrom.com</p>
+                            <div class="subscription-status">
+                                <span>Subscription:</span>
+                                <span class="status-badge free">Free Plan</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subscriptions-header">
+                        <h3>Upgrade Your Plan</h3>
+                        <p>Get access to exclusive analytics and portfolio tracking features.</p>
+                    </div>
+
+                    <div class="pricing-grid">
+                        <div class="pricing-card"><div class="card-shine-effect"></div><div class="card-content-wrapper"><h4 class="plan-name">1 Month</h4><div class="plan-price">$5.99 <span class="price-period">/ month</span></div><ul class="plan-features"><li>✓ Advanced Analytics</li><li>✓ Unlimited Assets</li><li>✓ Priority Support</li></ul><button class="white-btn subscribe-btn">Choose Plan</button></div></div>
+                        <div class="pricing-card recommended"><div class="card-shine-effect"></div><div class="card-content-wrapper"><div class="recommended-badge">Best Value</div><h4 class="plan-name">6 Months</h4><div class="plan-price">$29.99 <span class="price-period">/ 6 months</span></div><ul class="plan-features"><li>✓ All Basic Features</li><li>✓ AI Recommendations</li><li>✓ Export Data</li></ul><button class="white-btn subscribe-btn">Choose Plan</button></div></div>
+                        <div class="pricing-card"><div class="card-shine-effect"></div><div class="card-content-wrapper"><h4 class="plan-name">1 Year</h4><div class="plan-price">$59.99 <span class="price-period">/ year</span></div><ul class="plan-features"><li>✓ All Pro Features</li><li>✓ Dedicated Manager</li><li>✓ Early Access</li></ul><button class="white-btn subscribe-btn">Choose Plan</button></div></div>
+                    </div>
+                </main>
+            </div>
+
+            <!-- 5. СТРАНИЦА SETTINGS -->
+            <div id="page-settings" class="page">
+                <main class="main-content">
+                    <header>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <button class="sidebar-toggle-btn menu-btn">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                            </button>
+                            <h1 style="margin-bottom: 0;">Settings</h1>
+                        </div>
+                    </header>
+
+                    <div class="settings-layout">
+                        <div class="card full-width">
+                            <h3 class="card-title">Profile Information</h3>
+                            <div class="form-grid">
+                                <div class="form-group"><label for="full-name">Full Name</label><input type="text" id="full-name" class="styled-input" value="Fivaje5627"></div>
+                                <div class="form-group"><label for="email">Email Address</label><input type="email" id="email" class="styled-input" value="fivaje5627@gavrom.com" disabled></div>
+                            </div>
+                            <button class="white-btn" style="margin-top: 20px;">Update Profile</button>
+                        </div>
+                        <div class="card full-width">
+                            <h3 class="card-title">Promo Code</h3>
+                            <div class="promo-code-input-group">
+                                <input type="text" id="promo-code-input" class="styled-input" placeholder="Enter your code">
+                                <button class="white-btn" id="apply-promo-btn">Apply</button>
+                            </div>
+                        </div>
+                        <div class="card full-width">
+                            <h3 class="card-title">Preferences</h3>
+                            <div class="setting-row">
+                                <span>Default Currency</span>
+                                <select class="custom-select" id="currency-select">
+                                    <option value="USD">USD ($)</option>
+                                    <option value="EUR">EUR (€)</option>
+                                    <option value="GBP">GBP (£)</option>
+                                </select>
+                            </div>
+                            <div class="setting-row">
+                                <div class="setting-text"><span>Weekly Summary</span><p>Receive a summary of your portfolio performance.</p></div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" class="notification-toggle" data-key="notif-summary" checked>
+                                    <span class="toggle-knob"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="card full-width danger-zone">
+                            <h3 class="card-title">Danger Zone</h3>
+                            <div class="setting-row">
+                                <div class="setting-text"><span>Clear All Data</span><p>Permanently delete all data. This action cannot be undone.</p></div>
+                                <button class="danger-btn" id="clear-data-btn">Clear All Data</button>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+            
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
