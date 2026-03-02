@@ -737,10 +737,11 @@ function createAssetCard(catName, assetName, initialValue, amount, isInitialLoad
     card.className = 'card';
     card.id = id;
     
-    // ИСПРАВЛЕНИЕ: Добавлена кнопка удаления (card-delete-btn) в верхний угол, а из таблицы она убрана!
+    // ИСПРАВЛЕНИЕ: Кнопка со старым дизайном (del-btn), но позиционированная сверху справа (pos-top-right)
     card.innerHTML = `
-        <button class="card-delete-btn" onclick="removeCard('${id}')" title="Delete Asset">✕</button>
-        <h3 class="card-label">Category: ${catName}</h3>
+        <button class="del-btn pos-top-right" onclick="removeCard('${id}')" title="Delete Asset">✕</button>
+        
+        <h3 class="card-label" style="padding-right: 50px;">Category: ${catName}</h3>
         <table class="asset-table">
             <thead>
                 <tr>

@@ -1866,9 +1866,48 @@ body.sidebar-closed .sidebar { transform: translateX(-100%); }
     font-weight: inherit;
 }
 
-/* Скрываем текст только на планшетах (когда сайдбар сужается до 80px), 
+/* Скрываем текст только на планшетах (когда сайдбар сужается до 80px),
    но на телефонах (<900px) в выпадающем меню он БУДЕТ виден */
 @media (max-width: 1300px) and (min-width: 901px) {
     .nav-text { display: none !important; }
+}
+
+/* ================================================================== */
+/* === ФИНАЛЬНЫЙ ФИКС КРЕСТИКА И КНОПКИ ACCOUNT === */
+/* ================================================================== */
+
+/* 1. Бронебойный фикс для слова Account - теперь оно 100% будет видно */
+.account-item span,
+.account-item .nav-text,
+.account-text {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    font-size: 15px !important;
+    color: var(--text-sec);
+}
+
+.account-item.active .account-text {
+    color: #fff !important;
+    font-weight: 700 !important;
+}
+
+/* 2. Позиционирование старого крестика в правый верхний угол на ПК */
+.pos-top-right {
+    position: absolute !important;
+    top: 30px !important;
+    right: 30px !important;
+    z-index: 100 !important;
+}
+
+/* Адаптация отступов крестика для мобильных телефонов */
+@media (max-width: 768px) {
+    .pos-top-right {
+        top: 20px !important;
+        right: 20px !important;
+        /* Жестко фиксируем размер твоей старой кнопки на телефонах */
+        width: 42px !important;
+        height: 42px !important;
+    }
 }
 
