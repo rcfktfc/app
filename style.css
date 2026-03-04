@@ -1791,19 +1791,23 @@ body.sidebar-closed .sidebar { transform: translateX(-100%); }
         font-size: 16px !important; /* Убивает автоматический зум на iPhone */
     }
 
-    /* === ВСЕ ВСПЛЫВАЮЩИЕ ОКНА (POPOVERS) ПО ЦЕНТРУ === */
-    .rec-popover, 
+    /* === ВСЕ ВСПЛЫВАЮЩИЕ ОКНА (POPOVERS) КАК BOTTOM SHEET === */
+    .rec-popover,
     #page-portfolio .rec-popover {
         position: fixed !important;
-        top: 50% !important;
-        left: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        width: 90% !important;
-        max-width: 320px !important;
-        z-index: 9999 !important;
-        box-shadow: 0 0 0 2000px rgba(0,0,0,0.8), 0 20px 40px rgba(0,0,0,0.5) !important;
-        border-radius: 24px !important;
-        padding: 25px !important;
+        top: auto !important;
+        bottom: 0 !important; /* Привязываем к низу экрана */
+        left: 0 !important;
+        transform: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        z-index: 99999 !important;
+        /* Убрали 2000px тень, чтобы не затемнять остальные инпуты и шапку */
+        box-shadow: 0 -10px 40px rgba(0,0,0,0.8) !important;
+        border-radius: 24px 24px 0 0 !important;
+        /* Добавили safe-area для комфортного отображения на iPhone */
+        padding: 25px 25px max(30px, env(safe-area-inset-bottom)) 25px !important;
+        margin: 0 !important;
     }
 
     /* Делаем главные модалки (Add Pie) более аккуратными на телефоне */
@@ -1937,12 +1941,10 @@ body.sidebar-closed .sidebar { transform: translateX(-100%); }
 
 /* 3. Усмиряем шапку, чтобы она не пробивала мобильное меню */
 .main-content header {
-    z-index: 100 !important;
-    /* Оставляем translateZ, но только если меню закрыто, 
-       чтобы меню спокойно открывалось поверх */
+    z-index: 500 !important; /* Увеличили с 100 до 500, чтобы сфокусированные карточки не перекрывали шапку */
 }
 
-/* Когда меню открыто (body не имеет класса sidebar-closed), 
+/* Когда меню открыто (body не имеет класса sidebar-closed),
    опускаем шапку в самый низ, чтобы она точно не мешала */
 body:not(.sidebar-closed) .main-content header {
     z-index: 1 !important;
