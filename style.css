@@ -1951,3 +1951,39 @@ body:not(.sidebar-closed) .main-content header {
     transform: none !important;
 }
 
+/* ================================================================== */
+/* === ГЛОБАЛЬНЫЙ ФИКС ВЫПАДАЮЩИХ МЕНЮ ФИЛЬТРОВ (POPOVERS) === */
+/* ================================================================== */
+
+/* Базовый дизайн: темный фон, скрыто по умолчанию */
+.rec-popover {
+    display: none !important; /* Жестко прячем, пока не нажата кнопка */
+    background: #1c1c1e !important; /* Непрозрачный темный фон */
+    border: 1px solid #3a3a3c !important;
+    padding: 24px !important;
+    border-radius: 24px !important;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.9) !important;
+    z-index: 99999 !important; /* Поверх всех графиков и карточек */
+}
+
+/* Показываем только когда добавляется класс active (при клике) */
+.rec-popover.active {
+    display: block !important; 
+}
+
+/* На мобильных устройствах делаем в виде красивой панели снизу (Bottom Sheet) */
+@media (max-width: 768px) {
+    .rec-popover {
+        position: fixed !important;
+        top: auto !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 24px 24px 0 0 !important;
+        padding: 25px 25px max(30px, env(safe-area-inset-bottom)) 25px !important;
+        margin: 0 !important;
+        box-shadow: 0 -15px 40px rgba(0,0,0,0.8) !important;
+    }
+}
+
