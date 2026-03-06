@@ -864,6 +864,29 @@ window.addEventListener('load', async () => {
         if (meta && history && history.length > 0) createAssetCard(meta.category, meta.name, history[history.length - 1].value, 0, true, id);
     });
     setupButtonAnims(); updateDashboard();
+
+    // --- ДОБАВЛЕННЫЙ КОД: Логика работы поиска (фильтрации) ---
+    const portfolioSearch = document.getElementById('portfolioSearch');
+    if (portfolioSearch) {
+        portfolioSearch.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase().trim();
+            
+            Object.keys(portfolioAssetMeta).forEach(id => {
+                const card = document.getElementById(id);
+                if (card) {
+                    // Ищем и по названию, и по категории для большего удобства
+                    const name = (portfolioAssetMeta[id].name || '').toLowerCase();
+                    const category = (portfolioAssetMeta[id].category || '').toLowerCase();
+                    
+                    if (name.includes(term) || category.includes(term)) {
+                        card.style.display = ''; // Показываем карточку, если есть совпадение
+                    } else {
+                        card.style.display = 'none'; // Скрываем, если не подходит
+                    }
+                }
+            });
+        });
+    }
 });
 
 window.addEventListener('resize', () => { Object.keys(portfolioAssetHistory).forEach(id => renderGraph(id)); });
