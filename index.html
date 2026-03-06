@@ -235,6 +235,38 @@
                         </div>
                     </header>
 
+                    <!-- НОВЫЙ БЛОК: Поиск и Фильтры для Аналитики -->
+                    <div style="margin-bottom: 24px; margin-top: 15px; display: flex; gap: 12px; align-items: center; z-index: 100; position: relative;" id="analytics-filter-container">
+                        <!-- Поле поиска -->
+                        <div style="flex: 1; position: relative;">
+                            <input type="text" id="analyticsSearch" class="inline-input" placeholder="Search analytics by asset or category..." style="width: 100%; padding-left: 48px; border-radius: 20px; height: 53px; box-sizing: border-box;">
+                            <svg style="position: absolute; left: 20px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-sec);" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </div>
+                        
+                        <!-- Прозрачная кнопка-иконка (3 палочки) -->
+                        <div class="rec-wrapper" style="position: relative;">
+                            <button style="background: transparent; border: 1px solid var(--border); color: var(--text-sec); width: 53px; height: 53px; border-radius: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease;" 
+                                    onclick="toggleAnalyticsFilterPop(event)" 
+                                    onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.color='#fff';" 
+                                    onmouseout="this.style.background='transparent'; this.style.color='var(--text-sec)';">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="4" y1="6" x2="20" y2="6"></line>
+                                    <line x1="6" y1="12" x2="18" y2="12"></line>
+                                    <line x1="8" y1="18" x2="16" y2="18"></line>
+                                </svg>
+                            </button>
+                            
+                            <!-- Всплывающее меню фильтров -->
+                            <div class="rec-popover" id="analytics-filter-pop" onclick="event.stopPropagation()" style="width: 260px; right: 0; left: auto; top: calc(100% + 10px); max-height: 400px; overflow-y: auto;">
+                                <span class="card-label">Filter by Asset Name</span>
+                                <div id="analyticsFilterNameList" style="display: flex; flex-direction: column; gap: 4px; margin-top: 10px; margin-bottom: 20px;"></div>
+
+                                <span class="card-label">Filter by Category</span>
+                                <div id="analyticsFilterCategoryList" style="display: flex; flex-direction: column; gap: 4px; margin-top: 10px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div id="analytics-content">
                         <div class="kpi-grid">
                             <div class="kpi-card"><span class="card-label">Portfolio Value</span><div class="kpi-value" id="kpi-total-value">$0.00</div></div>
