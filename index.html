@@ -154,11 +154,28 @@
                         <div class="stat-categories" id="categoryBreakdown"></div>
                     </div>
 
-                    <!-- НОВЫЙ БЛОК: Поле поиска по активам -->
-                    <div style="margin-bottom: 24px; position: relative;">
-                        <input type="text" id="portfolioSearch" class="inline-input" placeholder="Search assets by name or category..." style="width: 100%; padding-left: 48px; border-radius: 20px;">
-                        <!-- Иконка лупы -->
-                        <svg style="position: absolute; left: 20px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-sec);" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <!-- НОВЫЙ БЛОК: Поиск и Фильтр по категориям -->
+                    <div style="margin-bottom: 24px; display: flex; gap: 15px; align-items: stretch; z-index: 100; position: relative; flex-wrap: wrap;">
+                        <!-- Поле поиска -->
+                        <div style="flex: 1; min-width: 250px; position: relative;">
+                            <input type="text" id="portfolioSearch" class="inline-input" placeholder="Search assets by name..." style="width: 100%; padding-left: 48px; border-radius: 20px; height: 53px; box-sizing: border-box;">
+                            <svg style="position: absolute; left: 20px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-sec);" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </div>
+                        
+                        <!-- Выпадающий список категорий -->
+                        <div class="rec-wrapper" style="position: relative;">
+                            <button class="white-btn" style="padding: 0 24px; border-radius: 20px; display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 53px; min-width: 180px;" onclick="toggleFilterPop(event)">
+                                <span id="filterBtnText">All Categories</span>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            <!-- Само всплывающее меню -->
+                            <div class="rec-popover" id="filter-pop" onclick="event.stopPropagation()" style="width: 260px; right: 0; left: auto; top: calc(100% + 10px);">
+                                <span class="card-label">Filter by category</span>
+                                <div id="filterCategoryList" style="display: flex; flex-direction: column; gap: 4px; margin-top: 15px;">
+                                    <!-- Список генерируется через JS -->
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="bento" id="portfolioBento">

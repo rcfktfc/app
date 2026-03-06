@@ -665,20 +665,102 @@ function updateAllGroupTotals(assetName) {
     });
 }
 
-function updateDashboard() {
-    const totalEl = document.getElementById('globalTotalDisplay'); const catContainer = document.getElementById('categoryBreakdown');
-    if(!totalEl || !catContainer) return;
-    let globalSum = 0; let catSums = {};
+// --- НОВАЯ ЛОГИКА ФИЛЬТРОВ ---
+window.activeCategoryFilter = null; // null означает "Выбраны все категории"
+
+function toggleFilterPop(e) {
+    e.stopPropagation();
+    const pop = document.getElementById('filter-pop');
+    const isActive = pop.classList.contains('active');
+    closeAllPops();
+    if (!isActive) pop.classList.add('active');
+}
+
+function setCategoryFilter(category) {
+    window.activeCategoryFilter = category;
+    const btnText = document.getElementById('filterBtnText');
+    if (btnText) btnText.textContent = category ? category : 'All Categories';
+    closeAllPops();
+    updateDashboard(); // Пересчитываем статистику под фильтр
+}
+
+function updateFilterDropdown() {
+    const listEl = document.getElementById('filterCategoryList');
+    if (!listEl) return;
+    
+    // Получаем уникальные категории из всех активов
+    const uniqueCategories = [...new Set(Object.values(portfolioAssetMeta).map(m => m.category))];
+    
+    let html = `<button class="tag-white" style="width:100%; text-align:left; margin-bottom: 5px; background: ${window.activeCategoryFilter === null ? '#fff' : 'rgba(255,255,255,0.1)'} !important; color: ${window.activeCategoryFilter === null ? '#000' : '#fff'} !important;" onclick="setCategoryFilter(null)">All Categories</button>`;
+    
+    uniqueCategories.forEach(cat => {
+        const isActive = window.activeCategoryFilter === cat;
+        html += `<button class="tag-white" style="width:100%; text-align:left; margin-bottom: 5px; background: ${isActive ? '#fff' : 'rgba(255,255,255,0.1)'} !important; color: ${isActive ? '#000' : '#fff'} !important;" onclick="setCategoryFilter('${cat}')">${cat}</button>`;
+    });
+    
+    listEl.innerHTML = html;
+}
+
+function applyFilters() {
+    const searchInput = document.getElementById('portfolioSearch');
+    const term = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
     Object.keys(portfolioAssetMeta).forEach(id => {
-        const history = portfolioAssetHistory[id];
-        if (history && history.length > 0) {
-            const currentVal = history[history.length - 1].value; const category = portfolioAssetMeta[id].category;
-            globalSum += currentVal; if (!catSums[category]) catSums[category] = 0; catSums[category] += currentVal;
+        const card = document.getElementById(id);
+        if (card) {
+            const name = (portfolioAssetMeta[id].name || '').toLowerCase();
+            const category = portfolioAssetMeta[id].category;
+            const categoryLower = (category || '').toLowerCase();
+            
+            // Проверяем совпадение поиска
+            const matchesSearch = name.includes(term) || categoryLower.includes(term);
+            // Проверяем совпадение выбранной категории
+            const matchesCategory = !window.activeCategoryFilter || category === window.activeCategoryFilter;
+
+            if (matchesSearch && matchesCategory) {
+                card.style.display = ''; 
+            } else {
+                card.style.display = 'none'; 
+            }
         }
     });
+}
+
+// --- ОБНОВЛЕННЫЙ РАСЧЕТ СТАТИСТИКИ ---
+function updateDashboard() {
+    const totalEl = document.getElementById('globalTotalDisplay'); 
+    const catContainer = document.getElementById('categoryBreakdown');
+    if(!totalEl || !catContainer) return;
+    
+    let globalSum = 0; 
+    let catSums = {};
+    
+    Object.keys(portfolioAssetMeta).forEach(id => {
+        const category = portfolioAssetMeta[id].category;
+        
+        // Если выбрана конкретная категория, пропускаем все остальные
+        if (window.activeCategoryFilter && category !== window.activeCategoryFilter) return;
+
+        const history = portfolioAssetHistory[id];
+        if (history && history.length > 0) {
+            const currentVal = history[history.length - 1].value;
+            globalSum += currentVal; 
+            if (!catSums[category]) catSums[category] = 0; 
+            catSums[category] += currentVal;
+        }
+    });
+    
     totalEl.textContent = `$${globalSum.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    if (Object.keys(catSums).length === 0) { catContainer.innerHTML = `<span style="color:#444; font-size:12px;">No active assets</span>`; } 
-    else { catContainer.innerHTML = Object.keys(catSums).map(cat => `<div class="stat-card"><span class="stat-label">${cat}</span><div class="stat-val">$${catSums[cat].toLocaleString('en-US', {minimumFractionDigits: 2})}</div></div>`).join(''); }
+    
+    if (Object.keys(catSums).length === 0) { 
+        catContainer.innerHTML = `<span style="color:#444; font-size:12px;">No active assets</span>`; 
+    } else { 
+        catContainer.innerHTML = Object.keys(catSums).map(cat => `<div class="stat-card"><span class="stat-label">${cat}</span><div class="stat-val">$${catSums[cat].toLocaleString('en-US', {minimumFractionDigits: 2})}</div></div>`).join(''); 
+    }
+
+    // При каждом обновлении статистики, перерисовываем список фильтров и скрываем/показываем карточки
+    if (typeof updateFilterDropdown === 'function') updateFilterDropdown();
+    if (typeof applyFilters === 'function') applyFilters();
 }
 
 function selectTag(name) { if (!globalSelectedTags.find(t => t.name === name)) { globalSelectedTags.push({ name: name, price: "" }); renderGlobalTags(); } }
@@ -865,27 +947,10 @@ window.addEventListener('load', async () => {
     });
     setupButtonAnims(); updateDashboard();
 
-    // --- ДОБАВЛЕННЫЙ КОД: Логика работы поиска (фильтрации) ---
+    // --- ДОБАВЛЕННЫЙ КОД: Вызов общей функции фильтрации ---
     const portfolioSearch = document.getElementById('portfolioSearch');
     if (portfolioSearch) {
-        portfolioSearch.addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase().trim();
-            
-            Object.keys(portfolioAssetMeta).forEach(id => {
-                const card = document.getElementById(id);
-                if (card) {
-                    // Ищем и по названию, и по категории для большего удобства
-                    const name = (portfolioAssetMeta[id].name || '').toLowerCase();
-                    const category = (portfolioAssetMeta[id].category || '').toLowerCase();
-                    
-                    if (name.includes(term) || category.includes(term)) {
-                        card.style.display = ''; // Показываем карточку, если есть совпадение
-                    } else {
-                        card.style.display = 'none'; // Скрываем, если не подходит
-                    }
-                }
-            });
-        });
+        portfolioSearch.addEventListener('input', () => applyFilters());
     }
 });
 
