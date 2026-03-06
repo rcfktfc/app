@@ -154,12 +154,12 @@
                         <div class="stat-categories" id="categoryBreakdown"></div>
                     </div>
 
-                    <!-- НОВЫЙ БЛОК: Поиск, Сортировка и Фильтры -->
+                    <!-- НОВЫЙ БЛОК: Поиск и Фильтры (Имя + Категория) -->
                     <div style="margin-bottom: 24px; display: flex; gap: 12px; align-items: center; z-index: 100; position: relative;">
                         
                         <!-- Поле поиска -->
                         <div style="flex: 1; position: relative;">
-                            <input type="text" id="portfolioSearch" class="inline-input" placeholder="Search assets by name..." style="width: 100%; padding-left: 48px; border-radius: 20px; height: 53px; box-sizing: border-box;">
+                            <input type="text" id="portfolioSearch" class="inline-input" placeholder="Search assets by name or category..." style="width: 100%; padding-left: 48px; border-radius: 20px; height: 53px; box-sizing: border-box;">
                             <svg style="position: absolute; left: 20px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-sec);" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                         </div>
                         
@@ -176,20 +176,19 @@
                                 </svg>
                             </button>
                             
-                            <!-- Всплывающее меню с сортировкой и фильтрами -->
-                            <div class="rec-popover" id="filter-pop" onclick="event.stopPropagation()" style="width: 260px; right: 0; left: auto; top: calc(100% + 10px);">
+                            <!-- Всплывающее меню (макс. высота и скролл на случай если будет много активов) -->
+                            <div class="rec-popover" id="filter-pop" onclick="event.stopPropagation()" style="width: 260px; right: 0; left: auto; top: calc(100% + 10px); max-height: 400px; overflow-y: auto;">
                                 
-                                <span class="card-label">Sort By Name & Value</span>
-                                <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 10px; margin-bottom: 20px;">
-                                    <button class="tag-white sort-btn" id="sort-name-asc" style="width:100%; text-align:left; background: rgba(255,255,255,0.05) !important; color: #fff !important;" onclick="setSort('name-asc')">Name (A to Z)</button>
-                                    <button class="tag-white sort-btn" id="sort-name-desc" style="width:100%; text-align:left; background: rgba(255,255,255,0.05) !important; color: #fff !important;" onclick="setSort('name-desc')">Name (Z to A)</button>
-                                    <button class="tag-white sort-btn" id="sort-value-desc" style="width:100%; text-align:left; background: rgba(255,255,255,0.05) !important; color: #fff !important;" onclick="setSort('value-desc')">Highest Value</button>
+                                <span class="card-label">Filter by Asset Name</span>
+                                <div id="filterNameList" style="display: flex; flex-direction: column; gap: 4px; margin-top: 10px; margin-bottom: 20px;">
+                                    <!-- Список Имен генерируется через JS -->
                                 </div>
 
                                 <span class="card-label">Filter by Category</span>
                                 <div id="filterCategoryList" style="display: flex; flex-direction: column; gap: 4px; margin-top: 10px;">
-                                    <!-- Список категорий -->
+                                    <!-- Список Категорий генерируется через JS -->
                                 </div>
+                                
                             </div>
                         </div>
                     </div>

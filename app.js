@@ -665,9 +665,9 @@ function updateAllGroupTotals(assetName) {
     });
 }
 
-// --- НОВАЯ ЛОГИКА ФИЛЬТРОВ И СОРТИРОВКИ ---
+// --- НОВАЯ ЛОГИКА ФИЛЬТРОВ (ИМЯ + КАТЕГОРИЯ) ---
 window.activeCategoryFilter = null;
-window.activeSort = null;
+window.activeNameFilter = null;
 
 function toggleFilterPop(e) {
     e.stopPropagation();
@@ -683,69 +683,39 @@ function setCategoryFilter(category) {
     updateDashboard(); 
 }
 
-// Новая функция: Сортировка по названиям и цене
-function setSort(sortType) {
-    window.activeSort = sortType;
-    
-    // Красим активную кнопку сортировки
-    document.querySelectorAll('.sort-btn').forEach(btn => {
-        btn.style.setProperty('background', 'rgba(255,255,255,0.05)', 'important');
-        btn.style.setProperty('color', '#fff', 'important');
-    });
-    const activeBtn = document.getElementById(`sort-${sortType}`);
-    if (activeBtn) {
-        activeBtn.style.setProperty('background', '#fff', 'important');
-        activeBtn.style.setProperty('color', '#000', 'important');
-    }
-
-    applySorting();
+function setNameFilter(name) {
+    window.activeNameFilter = name || null;
     closeAllPops();
-}
-
-function applySorting() {
-    if (!window.activeSort) return;
-    
-    const bento = document.getElementById('portfolioBento');
-    if (!bento) return;
-    
-    // Получаем все карточки, кроме панели создания
-    const cards = Array.from(bento.querySelectorAll('.card:not(#controlPanel)'));
-    
-    cards.sort((a, b) => {
-        const metaA = portfolioAssetMeta[a.id];
-        const metaB = portfolioAssetMeta[b.id];
-        if (!metaA || !metaB) return 0;
-
-        if (window.activeSort === 'name-asc') {
-            return metaA.name.localeCompare(metaB.name); // От А до Я
-        } else if (window.activeSort === 'name-desc') {
-            return metaB.name.localeCompare(metaA.name); // От Я до А
-        } else if (window.activeSort === 'value-desc') {
-            const valA = portfolioAssetHistory[a.id] ? portfolioAssetHistory[a.id][portfolioAssetHistory[a.id].length - 1].value : 0;
-            const valB = portfolioAssetHistory[b.id] ? portfolioAssetHistory[b.id][portfolioAssetHistory[b.id].length - 1].value : 0;
-            return valB - valA; // Сначала дорогие
-        }
-        return 0;
-    });
-
-    // Расставляем карточки в новом порядке
-    cards.forEach(card => bento.appendChild(card));
+    updateDashboard(); 
 }
 
 function updateFilterDropdown() {
-    const listEl = document.getElementById('filterCategoryList');
-    if (!listEl) return;
+    const catListEl = document.getElementById('filterCategoryList');
+    const nameListEl = document.getElementById('filterNameList');
     
-    const uniqueCategories = [...new Set(Object.values(portfolioAssetMeta).map(m => m.category))];
+    // Получаем уникальные категории и уникальные имена активов
+    const uniqueCategories = [...new Set(Object.values(portfolioAssetMeta).map(m => m.category))].filter(Boolean);
+    const uniqueNames = [...new Set(Object.values(portfolioAssetMeta).map(m => m.name))].filter(Boolean);
     
-    let html = `<button class="tag-white" style="width:100%; text-align:left; margin-bottom: 5px; background: ${window.activeCategoryFilter === null ? '#fff' : 'rgba(255,255,255,0.1)'} !important; color: ${window.activeCategoryFilter === null ? '#000' : '#fff'} !important;" onclick="setCategoryFilter('')">All Categories</button>`;
-    
-    uniqueCategories.forEach(cat => {
-        const isActive = window.activeCategoryFilter === cat;
-        html += `<button class="tag-white" style="width:100%; text-align:left; margin-bottom: 5px; background: ${isActive ? '#fff' : 'rgba(255,255,255,0.1)'} !important; color: ${isActive ? '#000' : '#fff'} !important;" onclick="setCategoryFilter('${cat}')">${cat}</button>`;
-    });
-    
-    listEl.innerHTML = html;
+    // --- ГЕНЕРАЦИЯ СПИСКА ИМЕН ---
+    if (nameListEl) {
+        let nameHtml = `<button class="tag-white" style="width:100%; text-align:left; margin-bottom: 5px; background: ${window.activeNameFilter === null ? '#fff' : 'rgba(255,255,255,0.05)'} !important; color: ${window.activeNameFilter === null ? '#000' : '#fff'} !important; border: 1px solid var(--border);" onclick="setNameFilter('')">All Asset Names</button>`;
+        uniqueNames.forEach(name => {
+            const isActive = window.activeNameFilter === name;
+            nameHtml += `<button class="tag-white" style="width:100%; text-align:left; margin-bottom: 5px; background: ${isActive ? '#fff' : 'rgba(255,255,255,0.05)'} !important; color: ${isActive ? '#000' : '#fff'} !important; border: 1px solid var(--border);" onclick="setNameFilter('${name}')">${name}</button>`;
+        });
+        nameListEl.innerHTML = nameHtml;
+    }
+
+    // --- ГЕНЕРАЦИЯ СПИСКА КАТЕГОРИЙ ---
+    if (catListEl) {
+        let catHtml = `<button class="tag-white" style="width:100%; text-align:left; margin-bottom: 5px; background: ${window.activeCategoryFilter === null ? '#fff' : 'rgba(255,255,255,0.05)'} !important; color: ${window.activeCategoryFilter === null ? '#000' : '#fff'} !important; border: 1px solid var(--border);" onclick="setCategoryFilter('')">All Categories</button>`;
+        uniqueCategories.forEach(cat => {
+            const isActive = window.activeCategoryFilter === cat;
+            catHtml += `<button class="tag-white" style="width:100%; text-align:left; margin-bottom: 5px; background: ${isActive ? '#fff' : 'rgba(255,255,255,0.05)'} !important; color: ${isActive ? '#000' : '#fff'} !important; border: 1px solid var(--border);" onclick="setCategoryFilter('${cat}')">${cat}</button>`;
+        });
+        catListEl.innerHTML = catHtml;
+    }
 }
 
 function applyFilters() {
@@ -755,14 +725,17 @@ function applyFilters() {
     Object.keys(portfolioAssetMeta).forEach(id => {
         const card = document.getElementById(id);
         if (card) {
-            const name = (portfolioAssetMeta[id].name || '').toLowerCase();
+            const name = (portfolioAssetMeta[id].name || '');
             const category = portfolioAssetMeta[id].category || '';
-            const categoryLower = category.toLowerCase();
             
-            const matchesSearch = name.includes(term) || categoryLower.includes(term);
+            // Ищем текст в поиске
+            const matchesSearch = name.toLowerCase().includes(term) || category.toLowerCase().includes(term);
+            
+            // Проверяем фильтры
             const matchesCategory = !window.activeCategoryFilter || category === window.activeCategoryFilter;
+            const matchesName = !window.activeNameFilter || name === window.activeNameFilter;
 
-            if (matchesSearch && matchesCategory) {
+            if (matchesSearch && matchesCategory && matchesName) {
                 card.style.display = ''; 
             } else {
                 card.style.display = 'none'; 
@@ -771,7 +744,7 @@ function applyFilters() {
     });
 }
 
-// --- ОБНОВЛЕННЫЙ РАСЧЕТ СТАТИСТИКИ ---
+// --- ОБНОВЛЕННЫЙ РАСЧЕТ СТАТИСТИКИ (Синхронизировано с двойным фильтром) ---
 function updateDashboard() {
     const totalEl = document.getElementById('globalTotalDisplay'); 
     const totalLabel = document.getElementById('mainTotalLabel'); 
@@ -782,21 +755,40 @@ function updateDashboard() {
     let catSums = {};
     
     Object.keys(portfolioAssetMeta).forEach(id => {
+        const name = portfolioAssetMeta[id].name || '';
         const category = portfolioAssetMeta[id].category || 'Uncategorized';
         const history = portfolioAssetHistory[id];
         const currentVal = (history && history.length > 0) ? history[history.length - 1].value : 0;
         
-        if (!catSums[category]) catSums[category] = 0; 
-        catSums[category] += currentVal;
+        const matchesName = !window.activeNameFilter || name === window.activeNameFilter;
+        const matchesCategory = !window.activeCategoryFilter || category === window.activeCategoryFilter;
 
-        if (!window.activeCategoryFilter || category === window.activeCategoryFilter) {
-            globalSum += currentVal;
+        // Если актив проходит фильтр по имени, добавляем его в статистику категорий
+        if (matchesName) {
+            if (!catSums[category]) catSums[category] = 0; 
+            catSums[category] += currentVal;
+
+            // Если он еще и проходит фильтр по категории, добавляем в главную сумму
+            if (matchesCategory) {
+                globalSum += currentVal;
+            }
         }
     });
     
     totalEl.textContent = `$${globalSum.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    if (totalLabel) totalLabel.textContent = window.activeCategoryFilter ? `${window.activeCategoryFilter} Balance` : 'Total Balance';
     
+    // Меняем заголовок в зависимости от выбранных фильтров
+    let labelText = 'Total Balance';
+    if (window.activeNameFilter && window.activeCategoryFilter) {
+        labelText = `${window.activeNameFilter} (${window.activeCategoryFilter})`;
+    } else if (window.activeCategoryFilter) {
+        labelText = `${window.activeCategoryFilter} Balance`;
+    } else if (window.activeNameFilter) {
+        labelText = `${window.activeNameFilter} Total`;
+    }
+    if (totalLabel) totalLabel.textContent = labelText;
+    
+    // Рисуем карточки (они отображают только те категории, которые актуальны для выбранного Name Filter)
     if (Object.keys(catSums).length === 0) { 
         catContainer.innerHTML = `<span style="color:#444; font-size:12px;">No active assets</span>`; 
     } else { 
@@ -813,7 +805,6 @@ function updateDashboard() {
 
     if (typeof updateFilterDropdown === 'function') updateFilterDropdown();
     if (typeof applyFilters === 'function') applyFilters();
-    if (typeof applySorting === 'function') applySorting(); // Применяем сортировку
 }
 
 function selectTag(name) { if (!globalSelectedTags.find(t => t.name === name)) { globalSelectedTags.push({ name: name, price: "" }); renderGlobalTags(); } }
