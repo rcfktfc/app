@@ -1987,3 +1987,57 @@ body:not(.sidebar-closed) .main-content header {
     }
 }
 
+/* ================================================================== */
+/* === ГЛОБАЛЬНЫЙ ДИЗАЙН ИНПУТОВ И ОТКЛЮЧЕНИЕ СИНЕЙ ОБВОДКИ === */
+/* ================================================================== */
+
+/* 1. Убиваем стандартную синюю обводку от Apple/Браузеров ВЕЗДЕ */
+input:focus, textarea:focus, select:focus, button:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Убираем синее "мигание" при тапе на экран с телефона */
+* {
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+/* 2. Делаем дизайн строки поиска тёмным и красивым для ВСЕХ страниц (отменяем системный белый стиль iOS) */
+.inline-input {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid var(--border) !important;
+    padding: 16px 20px !important;
+    border-radius: 16px !important;
+    color: #fff !important;
+    outline: none !important;
+    font-size: 16px !important; /* 16px предотвращает авто-зум на iPhone */
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease;
+    -webkit-appearance: none !important; /* Жестко отключаем белый системный дизайн Apple */
+}
+
+.inline-input:focus {
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* 3. Фикс для кнопок-фильтров внутри всплывающего меню (возвращаем им скругления и отступы) */
+.rec-popover button {
+    border-radius: 12px !important;
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    border: 1px solid var(--border) !important;
+    cursor: pointer;
+    transition: all 0.2s ease !important;
+}
+
+/* 4. Фикс для поля "+ add category" (убираем рамку при вводе) */
+.pill, .custom-tag-input {
+    outline: none !important;
+    -webkit-appearance: none !important;
+}
+.pill:focus, .custom-tag-input:focus {
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
