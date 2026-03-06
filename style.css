@@ -2041,3 +2041,8 @@ input:focus, textarea:focus, select:focus, button:focus {
     border-color: rgba(255, 255, 255, 0.3) !important;
 }
 
+/* Возвращаем отступ для текста, чтобы он не налезал на лупу */
+#portfolioSearch, #analyticsSearch {
+    padding-left: 48px !important;
+}
+
