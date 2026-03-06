@@ -418,7 +418,12 @@ async function loadMainData() {
 const openModal = (modalId) => document.getElementById(modalId).classList.add('active');
 const closeModal = (modalId) => document.getElementById(modalId).classList.remove('active');
 
-document.getElementById('openAddPieModal').onclick = () => openModal('modalAddPie');
+document.getElementById('openAddPieModal').onclick = () => {
+    openModal('modalAddPie');
+    // Моментально ставим фокус на поле ввода, чтобы вызвать клавиатуру
+    const input = document.getElementById('new-pie-name');
+    if (input) input.focus();
+};
 document.getElementById('confirm-add-pie').onclick = async () => await addPie();
 document.getElementById('openAddAssetModal').onclick = () => {
     const assetSelectionList = document.getElementById('asset-selection-list');
@@ -827,7 +832,13 @@ function renderGlobalTags() {
     }).join('');
 }
 
-function togglePricePop(index) { document.querySelectorAll('.rec-popover').forEach(p => p.classList.remove('active')); document.getElementById(`price-pop-${index}`).classList.add('active'); setTimeout(() => { const input = document.getElementById(`input-price-${index}`); if(input) input.focus(); }, 50); }
+function togglePricePop(index) { 
+    document.querySelectorAll('.rec-popover').forEach(p => p.classList.remove('active')); 
+    document.getElementById(`price-pop-${index}`).classList.add('active'); 
+    // Без setTimeout!
+    const input = document.getElementById(`input-price-${index}`);
+    if(input) input.focus(); 
+}
 function savePrice(index) { globalSelectedTags[index].price = document.getElementById(`input-price-${index}`).value; renderGlobalTags(); closeAllPops(); }
 function removeGlobalTag(name) { if (confirm(`Remove category "${name}"?`)) { globalSelectedTags = globalSelectedTags.filter(t => t.name !== name); renderGlobalTags(); } }
 
@@ -938,8 +949,24 @@ function createAssetCard(catName, assetName, initialValue, amount, isInitialLoad
 }
 
 function toggleDetails(id) { const row = document.getElementById(`det-row-${id}`); row.style.display = row.style.display === 'table-row' ? 'none' : 'table-row'; if (row.style.display === 'table-row') renderGraph(id); }
-function toggleRecs(id) { closeAllPops(); document.getElementById(`pop-${id}`).classList.add('active'); setTimeout(() => { const input = document.getElementById(`sub-tag-input-${id}`); if(input) input.focus(); }, 50); }
-function toggleEdit(id) { closeAllPops(); document.getElementById(`edit-pop-${id}`).classList.add('active'); setTimeout(() => { const input = document.getElementById(`edit-input-${id}`); if(input) { input.value = ''; input.focus(); } }, 50); }
+function toggleRecs(id) { 
+    closeAllPops(); 
+    document.getElementById(`pop-${id}`).classList.add('active'); 
+    // Без setTimeout!
+    const input = document.getElementById(`sub-tag-input-${id}`);
+    if(input) input.focus(); 
+}
+
+function toggleEdit(id) { 
+    closeAllPops(); 
+    document.getElementById(`edit-pop-${id}`).classList.add('active'); 
+    // Без setTimeout!
+    const input = document.getElementById(`edit-input-${id}`);
+    if(input) { 
+        input.value = ''; 
+        input.focus(); 
+    } 
+}
 function closeAllPops() { document.querySelectorAll('.rec-popover').forEach(p => p.classList.remove('active')); }
 
 async function removeCard(id) {
