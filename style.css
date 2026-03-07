@@ -2134,3 +2134,35 @@ input:focus, textarea:focus, select:focus, button:focus {
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
 }
 
+/* ================================================================== */
+/* === ФИКСЫ ДЛЯ ГЛАВНОЙ СТРАНИЦЫ (DASHBOARD) В СВЕТЛОЙ ТЕМЕ === */
+/* ================================================================== */
+
+/* 1. Жестко перебиваем черный фон карточки Performance на светлый */
+[data-theme="light"] #page-main .perf-gradient {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(235, 235, 245, 0.6) 100%) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.03) !important;
+}
+
+[data-theme="light"] #page-main .perf-gradient .card-title {
+    color: #000 !important; /* Гарантируем, что заголовок будет черным */
+}
+
+/* 2. Делаем дольки графика видимыми (меняем белое стекло на темное) */
+[data-theme="light"] #page-main .sector {
+    fill: rgba(0, 0, 0, 0.06) !important;  /* Слегка затемненное стекло */
+    stroke: rgba(0, 0, 0, 0.15) !important; /* Четкий темный контур */
+}
+
+/* 3. Делаем выезжающую строку в Breakdown заметнее при наведении на график */
+[data-theme="light"] #page-main .asset-row.highlight {
+    background: rgba(0, 0, 0, 0.08) !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 4. Исправляем фон иконки "Smart Insight" */
+[data-theme="light"] #page-main .ai-badge {
+    background: rgba(0, 122, 255, 0.15) !important;
+}
+
