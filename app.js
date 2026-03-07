@@ -675,48 +675,75 @@ function updateDashboardWidgets(activePie) {
     const insightEl = document.getElementById('smart-insight-content');
     const pulseEl = document.getElementById('market-pulse-content');
 
+    // Проверяем текущий язык
+    const isRu = window.appState && window.appState.lang === 'ru';
+
+    // --- 1. PERFORMANCE (Глобальная Прибыль/Убыток как в Аналитике) ---
+    let globalCurrentValue = 0;
+    let globalStartValue = 0;
+    
+    // Считаем общую прибыль по всем активам (не только в текущем пироге)
+    Object.keys(portfolioDataMain.assetHistory).forEach(id => {
+        const history = portfolioDataMain.assetHistory[id];
+        if (history && history.length > 0) {
+            globalCurrentValue += history[history.length - 1].value;
+            globalStartValue += history[0].value;
+        }
+    });
+    
+    let globalGainLoss = globalCurrentValue - globalStartValue;
+    let globalGainLossPercent = globalStartValue > 0 ? (globalGainLoss / globalStartValue) * 100 : 0;
+    
+    if (perfValEl) {
+        // Форматируем значения
+        const formattedGain = window.formatMoney(globalGainLoss, true);
+        const formattedPercent = `(${globalGainLossPercent.toFixed(2)}%)`;
+        const colorClass = globalGainLoss >= 0 ? 'var(--profit-green)' : 'var(--loss-red)';
+        
+        // Создаем подпись для процентов, если ее еще нет
+        let subEl = document.getElementById('performance-sub');
+        if (!subEl) {
+            subEl = document.createElement('div');
+            subEl.id = 'performance-sub';
+            subEl.style.fontSize = '16px';
+            subEl.style.fontWeight = '600';
+            subEl.style.marginTop = '8px';
+            perfValEl.parentNode.appendChild(subEl);
+        }
+        
+        // Обновляем текст (Цена и Процент)
+        perfValEl.textContent = formattedGain;
+        perfValEl.style.color = colorClass;
+        
+        subEl.textContent = formattedPercent;
+        subEl.style.color = colorClass;
+    }
+
+    // --- ЕСЛИ ПИРОГ ПУСТОЙ ---
     if (!activePie || activePie.assets.length === 0) {
-        if(perfValEl) { perfValEl.textContent = '0.0%'; perfValEl.style.color = 'var(--text-sec)'; }
-        if(insightEl) insightEl.innerHTML = 'Add assets to your pie to unlock AI insights and personalized recommendations.';
-        if(pulseEl) pulseEl.innerHTML = '<span style="color: var(--text-sec); font-size: 13px;">No data available. Add assets to see trends.</span>';
+        if(insightEl) insightEl.innerHTML = isRu ? 'Добавьте активы, чтобы открыть ИИ-анализ и персональные рекомендации.' : 'Add assets to your pie to unlock AI insights and personalized recommendations.';
+        if(pulseEl) pulseEl.innerHTML = `<span style="color: var(--text-sec); font-size: 13px;">${isRu ? 'Нет данных. Добавьте активы.' : 'No data available. Add assets to see trends.'}</span>`;
         return;
     }
 
-    // --- 1. PERFORMANCE (Расчет процента роста) ---
-    const history = activePie.history;
-    if (history && history.length > 0) {
-        let startValue = history[0].value;
-        let endValue = history[history.length - 1].value;
-        let percent = 0;
-        
-        if (startValue > 0) percent = ((endValue - startValue) / startValue) * 100;
-        else if (endValue > 0) percent = 100; // Если начали с 0 и пополнили
-
-        if(perfValEl) {
-            const sign = percent > 0 ? '+' : '';
-            perfValEl.textContent = `${sign}${percent.toFixed(1)}%`;
-            perfValEl.style.color = percent >= 0 ? 'var(--profit-green)' : 'var(--loss-red)';
-        }
-    }
-
-    // --- 2. SMART INSIGHT (ИИ Анализ) ---
+    // --- 2. SMART INSIGHT (ИИ Анализ с переводами) ---
     let totalVal = activePie.assets.reduce((s, a) => s + a.amount, 0);
     let largestAsset = activePie.assets.reduce((max, obj) => max.amount > obj.amount ? max : obj, activePie.assets[0]);
     
     if (totalVal === 0) {
-        if(insightEl) insightEl.innerHTML = "Your pie is empty. Update asset values in the Portfolio tab.";
+        if(insightEl) insightEl.innerHTML = isRu ? "Ваш пирог пуст. Обновите цены в Портфеле." : "Your pie is empty. Update asset values in the Portfolio tab.";
     } else {
         let percentShare = ((largestAsset.amount / totalVal) * 100).toFixed(0);
         if (percentShare > 65) {
-            insightEl.innerHTML = `<b style="color:var(--loss-red)">High Concentration Risk!</b><br><br><b>${largestAsset.name}</b> makes up <b>${percentShare}%</b> of this pie. Consider adding other assets to diversify your portfolio.`;
+            insightEl.innerHTML = `<b style="color:var(--loss-red)">${isRu ? 'Высокий риск концентрации!' : 'High Concentration Risk!'}</b><br><br>${isRu ? `<b>${largestAsset.name}</b> составляет <b>${percentShare}%</b> этого портфеля. Рассмотрите возможность диверсификации.` : `<b>${largestAsset.name}</b> makes up <b>${percentShare}%</b> of this pie. Consider adding other assets to diversify your portfolio.`}`;
         } else if (activePie.assets.length === 1) {
-            insightEl.innerHTML = `You only have one asset in this pie. Adding more assets helps reduce market risk.`;
+            insightEl.innerHTML = isRu ? `В этом портфеле только один актив. Добавьте больше для снижения рисков.` : `You only have one asset in this pie. Adding more assets helps reduce market risk.`;
         } else {
-            insightEl.innerHTML = `<b>Well balanced!</b><br><br>Your top asset is <b>${largestAsset.name}</b> (${percentShare}%). Keep monitoring your allocation to maintain stability.`;
+            insightEl.innerHTML = `<b>${isRu ? 'Отличный баланс!' : 'Well balanced!'}</b><br><br>${isRu ? `Ваш главный актив — <b>${largestAsset.name}</b> (${percentShare}%). Продолжайте следить за распределением.` : `Your top asset is <b>${largestAsset.name}</b> (${percentShare}%). Keep monitoring your allocation to maintain stability.`}`;
         }
     }
 
-    // --- 3. MARKET PULSE (Топ роста и падения) ---
+    // --- 3. MARKET PULSE (Топ роста и падения с переводами) ---
     let assetChanges = [];
     Object.keys(portfolioDataMain.assetMeta).forEach(id => {
         const hist = portfolioDataMain.assetHistory[id];
@@ -731,7 +758,7 @@ function updateDashboardWidgets(activePie) {
     });
 
     if (assetChanges.length > 0) {
-        assetChanges.sort((a, b) => b.change - a.change); // Сортируем от большего к меньшему
+        assetChanges.sort((a, b) => b.change - a.change); // Сортируем
         const topGainer = assetChanges[0];
         const topLoser = assetChanges[assetChanges.length - 1];
         
@@ -744,11 +771,11 @@ function updateDashboardWidgets(activePie) {
         }
         
         if (html === '') {
-            html = '<span style="color: var(--text-sec); font-size: 13px;">Market is stable. No significant price changes today.</span>';
+            html = `<span style="color: var(--text-sec); font-size: 13px;">${isRu ? 'Рынок стабилен. Сильных изменений нет.' : 'Market is stable. No significant price changes today.'}</span>`;
         }
         if(pulseEl) pulseEl.innerHTML = html;
     } else {
-        if(pulseEl) pulseEl.innerHTML = '<span style="color: var(--text-sec); font-size: 13px;">Not enough historical data to show trends. Update values to track performance.</span>';
+        if(pulseEl) pulseEl.innerHTML = `<span style="color: var(--text-sec); font-size: 13px;">${isRu ? 'Недостаточно истории для показа трендов. Обновите цены активов.' : 'Not enough historical data to show trends. Update values to track performance.'}</span>`;
     }
 }
 
