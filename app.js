@@ -1243,20 +1243,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function applyPromoCode() {
+    function applyPromoCode(event) {
+        // Предотвращаем любые странные срабатывания
+        if (event) event.preventDefault();
+
         if(!promoCodeInput) return;
+        
         const code = promoCodeInput.value.trim().toUpperCase();
+        
+        // Если кто-то вызвал функцию без клика и поле пустое — игнорируем, не показываем ошибку
+        if (!code && !event) return; 
+
         if (!code) {
             showToast('Please enter a promo code.', 'error');
             return;
         }
+        
         const validCodes = ['PRO100', 'SAVE20', 'SPECIAL'];
         if (validCodes.includes(code)) {
-            showToast('Promo code applied successfully!', 'success');
+            showToast(`Promo code applied successfully!`, 'success');
         } else {
             showToast('Invalid promo code.', 'error');
         }
         promoCodeInput.value = '';
+    }
+
+    // Привязываем жестко через onclick, чтобы избежать дублирования событий
+    if (applyPromoBtn) { 
+        applyPromoBtn.onclick = applyPromoCode; 
     }
 
     if(currencySelect) {
@@ -1284,8 +1298,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
-    if(applyPromoBtn) { applyPromoBtn.addEventListener('click', applyPromoCode); }
 
     if(themeToggle) {
         themeToggle.addEventListener('change', async () => {
