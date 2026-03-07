@@ -2166,3 +2166,38 @@ input:focus, textarea:focus, select:focus, button:focus {
     background: rgba(0, 122, 255, 0.15) !important;
 }
 
+/* ================================================================== */
+/* === ФИКСЫ ДЛЯ СТРАНИЦЫ ACCOUNT В СВЕТЛОЙ ТЕМЕ (СТЕКЛО) === */
+/* ================================================================== */
+
+/* 1. Делаем карточки профиля и тарифов действительно прозрачными */
+[data-theme="light"] #page-account .account-profile-card,
+[data-theme="light"] #page-account .pricing-card {
+    background: rgba(255, 255, 255, 0.25) !important; /* Сильная прозрачность для эффекта стекла */
+    backdrop-filter: blur(30px) !important;
+    -webkit-backdrop-filter: blur(30px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* 2. Возвращаем зеленый стеклянный градиент для "Рекомендуемого" тарифа */
+[data-theme="light"] #page-account .pricing-card.recommended {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, rgba(48, 209, 88, 0.15) 100%) !important;
+    border: 1px solid var(--green) !important;
+}
+
+/* 3. Фикс цвета текста в списке фич тарифа (они были светло-серыми из темной темы) */
+[data-theme="light"] #page-account .plan-features {
+    color: rgba(0, 0, 0, 0.65) !important;
+}
+
+/* Делаем цену более контрастной */
+[data-theme="light"] #page-account .plan-price {
+    color: #000 !important;
+}
+
+/* 4. Исправляем цвет бейджа "Best Value", чтобы он не сливался */
+[data-theme="light"] #page-account .recommended-badge {
+    color: #fff !important; 
+}
+
