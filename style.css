@@ -2201,3 +2201,59 @@ input:focus, textarea:focus, select:focus, button:focus {
     color: #fff !important; 
 }
 
+/* ================================================================== */
+/* === CUSTOM TOAST NOTIFICATIONS === */
+/* ================================================================== */
+
+.toast-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    pointer-events: none;
+    width: 90%;
+    max-width: 400px;
+}
+
+.toast {
+    background: rgba(30, 30, 32, 0.95);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 16px 24px;
+    border-radius: 20px;
+    font-size: 15px;
+    font-weight: 600;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transform: translateY(-50px) scale(0.9);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: auto;
+}
+
+.toast.show {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+}
+
+.toast.success { border-left: 4px solid var(--profit-green); }
+.toast.error { border-left: 4px solid var(--loss-red); }
+.toast.info { border-left: 4px solid #007AFF; }
+
+/* Адаптация тостов для светлой темы */
+[data-theme="light"] .toast {
+    background: rgba(255, 255, 255, 0.95);
+    color: #000;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+

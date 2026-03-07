@@ -90,6 +90,37 @@ window.AppStorage = {
 };
 
 // =================================================================
+// === КАСТОМНЫЕ УВЕДОМЛЕНИЯ (TOASTS) ===
+// =================================================================
+window.showToast = function(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    // Иконки в зависимости от типа
+    let icon = '';
+    if (type === 'success') icon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--profit-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
+    if (type === 'error') icon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--loss-red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
+    if (type === 'info') icon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
+
+    toast.innerHTML = `${icon} <span>${message}</span>`;
+    container.appendChild(toast);
+
+    // Запускаем анимацию появления
+    requestAnimationFrame(() => {
+        toast.classList.add('show');
+    });
+
+    // Удаляем через 3 секунды
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 400); // Ждем конца анимации
+    }, 3000);
+};
+
+// =================================================================
 // === ИНИЦИАЛИЗАЦИЯ TELEGRAM И РОУТЕР (МЕНЮ) ===
 // =================================================================
 document.addEventListener('DOMContentLoaded', function() {
@@ -552,7 +583,7 @@ function getTimestamp() { return new Date().toISOString(); }
 
 async function addPie() {
     const name = document.getElementById('new-pie-name').value.trim();
-    if (!name) return alert('Please enter a name.');
+    if (!name) return showToast('Please enter a name for your pie.', 'error');
     const newPie = { id: `pie-${Date.now()}`, name, assets: [], history: [{ date: getTimestamp(), value: 0 }] };
     pies.push(newPie); activePieId = newPie.id;
     document.getElementById('new-pie-name').value = '';
@@ -937,10 +968,10 @@ function removeGlobalTag(name) { if (confirm(`Remove category "${name}"?`)) { gl
 async function distributeByCategories() {
     const nameInp = document.getElementById('newAssetName'); const amountInp = document.getElementById('newAssetAmount');
     const name = nameInp.value.trim() || 'New Asset'; const totalAmount = parseFloat(amountInp.value) || 0;
-    if (globalSelectedTags.length === 0) return alert("Select at least one category!");
+    if (globalSelectedTags.length === 0) return showToast('Please select at least one category!', 'error');
     const currentSum = globalSelectedTags.reduce((sum, tag) => sum + (parseFloat(tag.price) || 0), 0);
-    if (currentSum > totalAmount) return alert(`Error: Sum (${currentSum}) exceeds Total (${totalAmount})!`);
-    
+    if (currentSum > totalAmount) return showToast(`Error: Sum exceeds Total amount!`, 'error');
+
     globalSelectedTags.forEach(cat => createAssetCard(cat.name, name, cat.price, totalAmount, false));
     nameInp.value = ''; amountInp.value = ''; globalSelectedTags = []; renderGlobalTags(); updateDashboard();
     
@@ -1190,7 +1221,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateProfileBtn.addEventListener('click', async () => {
             const newName = fullNameInput.value.trim();
             if (!newName) {
-                alert('Please enter a valid name.');
+                showToast('Please enter a valid name.', 'error');
                 return;
             }
 
@@ -1208,7 +1239,7 @@ document.addEventListener('DOMContentLoaded', () => {
             settings.customName = newName;
             await saveSettings();
 
-            alert('✅ Profile name updated successfully!');
+            showToast('Profile name updated successfully!', 'success');
         });
     }
 
@@ -1216,14 +1247,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if(!promoCodeInput) return;
         const code = promoCodeInput.value.trim().toUpperCase();
         if (!code) {
-            alert('Please enter a promo code.');
+            showToast('Please enter a promo code.', 'error');
             return;
         }
         const validCodes = ['PRO100', 'SAVE20', 'SPECIAL'];
         if (validCodes.includes(code)) {
-            alert(`✅ Promo code "${code}" applied successfully!`);
+            showToast('Promo code applied successfully!', 'success');
         } else {
-            alert(`❌ Invalid promo code.`);
+            showToast('Invalid promo code.', 'error');
         }
         promoCodeInput.value = '';
     }
@@ -1248,7 +1279,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearDataBtn.addEventListener('click', async () => {
             if (confirm('ARE YOU ABSOLUTELY SURE?\nThis will permanently delete your portfolio data from the Telegram Cloud. This action cannot be undone.')) {
                 await AppStorage.clearAll();
-                alert('Your application data has been cleared from the Cloud.');
+                showToast('All your data has been cleared.', 'success');
                 location.reload();
             }
         });
