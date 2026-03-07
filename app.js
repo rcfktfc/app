@@ -764,12 +764,12 @@ function updateDashboardWidgets(activePie) {
         
         let html = '';
         if (topGainer.change > 0) {
-            html += `<div class="pulse-item"><span class="pulse-name">🚀 ${topGainer.name}</span><span class="pulse-change green">+${topGainer.change.toFixed(1)}%</span></div>`;
+            html += `<div class="pulse-item"><span class="pulse-name">${topGainer.name}</span><span class="pulse-change green">+${topGainer.change.toFixed(1)}%</span></div>`;
         }
         if (topLoser.change < 0) {
-            html += `<div class="pulse-item"><span class="pulse-name">📉 ${topLoser.name}</span><span class="pulse-change red">${topLoser.change.toFixed(1)}%</span></div>`;
+            html += `<div class="pulse-item"><span class="pulse-name">${topLoser.name}</span><span class="pulse-change red">${topLoser.change.toFixed(1)}%</span></div>`;
         }
-        
+
         if (html === '') {
             html = `<span style="color: var(--text-sec); font-size: 13px;">${isRu ? 'Рынок стабилен. Сильных изменений нет.' : 'Market is stable. No significant price changes today.'}</span>`;
         }
