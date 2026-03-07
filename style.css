@@ -2046,3 +2046,91 @@ input:focus, textarea:focus, select:focus, button:focus {
     padding-left: 48px !important;
 }
 
+/* ================================================================== */
+/* === СВЕТЛАЯ ТЕМА (LIGHT MODE) === */
+/* ================================================================== */
+
+[data-theme="light"] {
+    --bg: #f2f2f7;
+    --card: #ffffff;
+    --text: #000000;
+    --text-sec: #8e8e93;
+    --border: rgba(0, 0, 0, 0.1);
+    --glass: rgba(0, 0, 0, 0.05);
+    --ai-glow: rgba(0, 122, 255, 0.1);
+}
+
+[data-theme="light"], [data-theme="light"] body {
+    background: var(--bg) !important;
+    color: var(--text) !important;
+}
+
+/* Инвертируем белые кнопки в черные */
+[data-theme="light"] .white-btn,
+[data-theme="light"] .tag-white,
+[data-theme="light"] .btn-add:not(.secondary):not(.blue-btn) {
+    background: #000 !important;
+    color: #fff !important;
+}
+
+/* Перекрашиваем всплывающие меню, модалки и шапку */
+[data-theme="light"] .rec-popover,
+[data-theme="light"] .modal-card,
+[data-theme="light"] .sidebar,
+[data-theme="light"] .custom-select option {
+    background: #ffffff !important;
+    border-color: var(--border) !important;
+}
+
+[data-theme="light"] .main-content header {
+    background: rgba(242, 242, 247, 0.85) !important;
+}
+
+/* Инпуты и поиск */
+[data-theme="light"] input, 
+[data-theme="light"] .inline-input, 
+[data-theme="light"] .styled-input, 
+[data-theme="light"] .modal-input,
+[data-theme="light"] .custom-tag-input,
+[data-theme="light"] .custom-select {
+    background: #e5e5ea !important;
+    color: #000 !important;
+    border-color: rgba(0,0,0,0.1) !important;
+}
+
+/* Текста и активы */
+[data-theme="light"] .amount-text,
+[data-theme="light"] .nav-item.active,
+[data-theme="light"] .nav-item:hover,
+[data-theme="light"] .account-item.active .account-text,
+[data-theme="light"] .menu-btn {
+    color: #000 !important;
+}
+
+/* Логотип */
+[data-theme="light"] .logo-box { background: #000; }
+
+/* Карточки со статистикой на странице Portfolio */
+[data-theme="light"] .stat-main,
+[data-theme="light"] .perf-gradient {
+    background: linear-gradient(145deg, #ffffff, #f2f2f7);
+}
+
+[data-theme="light"] .total-balance {
+    background: linear-gradient(90deg, #000, #555);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Мелкие элементы: плашки категорий, графики */
+[data-theme="light"] .pill { background: #e5e5ea; color: #000; border-color: rgba(0,0,0,0.1); }
+[data-theme="light"] .sub-pill { background: rgba(0,0,0,0.05); color: #333; }
+[data-theme="light"] .asset-row { background: rgba(0,0,0,0.02); }
+[data-theme="light"] .asset-row.highlight { background: rgba(0,0,0,0.08); }
+[data-theme="light"] .dot { background: #000; }
+[data-theme="light"] .graph-point { fill: #fff; }
+
+[data-theme="light"] .custom-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+}
+

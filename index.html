@@ -8,7 +8,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=5">
+    <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
     <div class="app-container">
@@ -366,6 +366,16 @@
                         </div>
                         <div class="card full-width">
                             <h3 class="card-title">Preferences</h3>
+                            
+                            <!-- НОВЫЙ БЛОК: Переключатель темы -->
+                            <div class="setting-row">
+                                <div class="setting-text"><span>Light Theme</span><p>Switch to light mode interface.</p></div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="theme-toggle">
+                                    <span class="toggle-knob"></span>
+                                </label>
+                            </div>
+                            
                             <div class="setting-row">
                                 <span>Default Currency</span>
                                 <select class="custom-select" id="currency-select">

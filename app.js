@@ -1,3 +1,10 @@
+// --- ЗАГРУЗКА ТЕМЫ (Защита от мерцания) ---
+try {
+    if (localStorage.getItem('fimax_theme') === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+    }
+} catch(e) {}
+
 // =================================================================
 // === УМНОЕ ОБЛАКО TELEGRAM (CLOUD STORAGE С ОБХОДОМ ЛИМИТА 4 КБ) ===
 // =================================================================
@@ -1123,23 +1130,43 @@ document.addEventListener('pageOpened', async (e) => {
 // === СТРАНИЦА SETTINGS (ПРОМОКОДЫ И НАСТРОЙКИ) ===
 // =================================================================
 document.addEventListener('DOMContentLoaded', () => {
+    const themeToggle = document.getElementById('theme-toggle'); // Добавили кнопку темы
     const currencySelect = document.getElementById('currency-select');
     const notificationToggles = document.querySelectorAll('.notification-toggle');
     const clearDataBtn = document.getElementById('clear-data-btn');
-    
+
     // Элементы для промокодов возвращены!
     const promoCodeInput = document.getElementById('promo-code-input');
     const applyPromoBtn = document.getElementById('apply-promo-btn');
 
     let settings = {};
 
+    function applyTheme(theme) {
+        if (theme === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+            localStorage.setItem('fimax_theme', 'light'); // Сохраняем локально
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('fimax_theme', 'dark');
+        }
+    }
+
     async function loadSettings() {
         const savedSettings = JSON.parse(await AppStorage.get('appSettings')) || {};
-        settings = { currency: savedSettings.currency || 'USD', 'notif-summary': savedSettings['notif-summary'] !== false };
+        settings = { 
+            currency: savedSettings.currency || 'USD', 
+            'notif-summary': savedSettings['notif-summary'] !== false,
+            theme: savedSettings.theme || localStorage.getItem('fimax_theme') || 'dark'
+        };
+        
         if(currencySelect) currencySelect.value = settings.currency;
         if(notificationToggles) notificationToggles.forEach(toggle => { toggle.checked = settings[toggle.dataset.key]; });
+        
+        // Включаем тумблер, если тема светлая
+        if(themeToggle) themeToggle.checked = settings.theme === 'light';
+        applyTheme(settings.theme);
     }
-    
+
     async function saveSettings() {
         await AppStorage.set('appSettings', JSON.stringify(settings));
     }
@@ -1190,6 +1217,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Подключаем слушатель на кнопку промокода
     if(applyPromoBtn) {
         applyPromoBtn.addEventListener('click', applyPromoCode);
+    }
+    
+    // ДОБАВЛЕННЫЙ КОД: Слушатель нажатия на переключатель темы
+    if(themeToggle) {
+        themeToggle.addEventListener('change', async () => {
+            settings.theme = themeToggle.checked ? 'light' : 'dark';
+            applyTheme(settings.theme);
+            await saveSettings();
+        });
     }
 
     loadSettings();
