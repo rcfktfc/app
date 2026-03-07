@@ -2257,3 +2257,27 @@ input:focus, textarea:focus, select:focus, button:focus {
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
 }
 
+/* ================================================================== */
+/* === СТИЛИ ДЛЯ ВИДЖЕТОВ MARKET PULSE === */
+/* ================================================================== */
+.pulse-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+}
+.pulse-name { font-weight: 600; font-size: 13px; }
+.pulse-change { font-weight: 800; font-size: 14px; }
+.pulse-change.green { color: var(--profit-green); }
+.pulse-change.red { color: var(--loss-red); }
+
+/* Адаптация под светлую тему */
+[data-theme="light"] .pulse-item {
+    background: rgba(0, 0, 0, 0.03) !important;
+}
+[data-theme="light"] #performance-title { color: #000 !important; }
+

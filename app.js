@@ -649,6 +649,89 @@ function renderMainPage() {
     renderPieChart(activePie.assets);
     animateValue(amountDisplay, totalAmount);
     renderSparkline(activePie.history);
+    updateDashboardWidgets(activePie);
+}
+
+function updateDashboardWidgets(activePie) {
+    const perfValEl = document.getElementById('performance-val');
+    const insightEl = document.getElementById('smart-insight-content');
+    const pulseEl = document.getElementById('market-pulse-content');
+
+    if (!activePie || activePie.assets.length === 0) {
+        if(perfValEl) { perfValEl.textContent = '0.0%'; perfValEl.style.color = 'var(--text-sec)'; }
+        if(insightEl) insightEl.innerHTML = 'Add assets to your pie to unlock AI insights and personalized recommendations.';
+        if(pulseEl) pulseEl.innerHTML = '<span style="color: var(--text-sec); font-size: 13px;">No data available. Add assets to see trends.</span>';
+        return;
+    }
+
+    // --- 1. PERFORMANCE (Расчет процента роста) ---
+    const history = activePie.history;
+    if (history && history.length > 0) {
+        let startValue = history[0].value;
+        let endValue = history[history.length - 1].value;
+        let percent = 0;
+        
+        if (startValue > 0) percent = ((endValue - startValue) / startValue) * 100;
+        else if (endValue > 0) percent = 100; // Если начали с 0 и пополнили
+
+        if(perfValEl) {
+            const sign = percent > 0 ? '+' : '';
+            perfValEl.textContent = `${sign}${percent.toFixed(1)}%`;
+            perfValEl.style.color = percent >= 0 ? 'var(--profit-green)' : 'var(--loss-red)';
+        }
+    }
+
+    // --- 2. SMART INSIGHT (ИИ Анализ) ---
+    let totalVal = activePie.assets.reduce((s, a) => s + a.amount, 0);
+    let largestAsset = activePie.assets.reduce((max, obj) => max.amount > obj.amount ? max : obj, activePie.assets[0]);
+    
+    if (totalVal === 0) {
+        if(insightEl) insightEl.innerHTML = "Your pie is empty. Update asset values in the Portfolio tab.";
+    } else {
+        let percentShare = ((largestAsset.amount / totalVal) * 100).toFixed(0);
+        if (percentShare > 65) {
+            insightEl.innerHTML = `<b style="color:var(--loss-red)">High Concentration Risk!</b><br><br><b>${largestAsset.name}</b> makes up <b>${percentShare}%</b> of this pie. Consider adding other assets to diversify your portfolio.`;
+        } else if (activePie.assets.length === 1) {
+            insightEl.innerHTML = `You only have one asset in this pie. Adding more assets helps reduce market risk.`;
+        } else {
+            insightEl.innerHTML = `<b>Well balanced!</b><br><br>Your top asset is <b>${largestAsset.name}</b> (${percentShare}%). Keep monitoring your allocation to maintain stability.`;
+        }
+    }
+
+    // --- 3. MARKET PULSE (Топ роста и падения) ---
+    let assetChanges = [];
+    Object.keys(portfolioDataMain.assetMeta).forEach(id => {
+        const hist = portfolioDataMain.assetHistory[id];
+        const meta = portfolioDataMain.assetMeta[id];
+        if (hist && hist.length > 1) {
+            let sVal = hist[0].value;
+            let cVal = hist[hist.length - 1].value;
+            if (sVal > 0 && cVal !== sVal) {
+                assetChanges.push({ name: meta.name, change: ((cVal - sVal) / sVal) * 100 });
+            }
+        }
+    });
+
+    if (assetChanges.length > 0) {
+        assetChanges.sort((a, b) => b.change - a.change); // Сортируем от большего к меньшему
+        const topGainer = assetChanges[0];
+        const topLoser = assetChanges[assetChanges.length - 1];
+        
+        let html = '';
+        if (topGainer.change > 0) {
+            html += `<div class="pulse-item"><span class="pulse-name">🚀 ${topGainer.name}</span><span class="pulse-change green">+${topGainer.change.toFixed(1)}%</span></div>`;
+        }
+        if (topLoser.change < 0) {
+            html += `<div class="pulse-item"><span class="pulse-name">📉 ${topLoser.name}</span><span class="pulse-change red">${topLoser.change.toFixed(1)}%</span></div>`;
+        }
+        
+        if (html === '') {
+            html = '<span style="color: var(--text-sec); font-size: 13px;">Market is stable. No significant price changes today.</span>';
+        }
+        if(pulseEl) pulseEl.innerHTML = html;
+    } else {
+        if(pulseEl) pulseEl.innerHTML = '<span style="color: var(--text-sec); font-size: 13px;">Not enough historical data to show trends. Update values to track performance.</span>';
+    }
 }
 
 function renderPieSelectors() {

@@ -130,9 +130,18 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="card col-4"><div class="card-title">Market Pulse</div></div>
-                        <div class="card col-4"><div class="card-title"><div class="ai-badge">✦</div> Smart Insight</div></div>
-                        <div class="card col-4 perf-gradient"><div class="card-title">Performance</div><div class="perf-val">+12.4%</div></div>
+                        <div class="card col-4" id="market-pulse-card">
+                            <div class="card-title">Market Pulse</div>
+                            <div id="market-pulse-content" style="margin-top: 15px;"></div>
+                        </div>
+                        <div class="card col-4" id="smart-insight-card">
+                            <div class="card-title"><div class="ai-badge">✦</div> Smart Insight</div>
+                            <div id="smart-insight-content" style="margin-top: 15px; font-size: 14px; color: var(--text-sec); line-height: 1.6;"></div>
+                        </div>
+                        <div class="card col-4 perf-gradient">
+                            <div class="card-title" id="performance-title">Performance</div>
+                            <div class="perf-val" id="performance-val">0.0%</div>
+                        </div>
                     </div>
                 </main>
             </div>
