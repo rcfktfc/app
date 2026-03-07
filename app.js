@@ -1259,7 +1259,7 @@ document.addEventListener('pageOpened', async (e) => {
 });
 
 // =================================================================
-// === СТРАНИЦА SETTINGS (ПРОМОКОДЫ, НАСТРОЙКИ, ЯЗЫК, ВАЛЮТА) ===
+// === СТРАНИЦА SETTINGS (ПРОМОКОДЫ, НАСТРОЙКИ + АВТО-ПЕРЕВОДЧИК) ===
 // =================================================================
 document.addEventListener('DOMContentLoaded', () => {
     const themeToggle = document.getElementById('theme-toggle');
@@ -1271,69 +1271,89 @@ document.addEventListener('DOMContentLoaded', () => {
     const promoCodeInput = document.getElementById('promo-code-input');
     const applyPromoBtn = document.getElementById('apply-promo-btn');
     const fullNameInput = document.getElementById('full-name');
-    const updateProfileBtn = Array.from(document.querySelectorAll('#page-settings .white-btn')).find(btn => btn.textContent.includes('Update Profile') || btn.textContent.includes('Обновить профиль'));
+    const updateProfileBtn = Array.from(document.querySelectorAll('#page-settings .white-btn')).find(btn => btn.textContent.includes('Update Profile') || btn.textContent.includes('Сохранить'));
 
     let settings = {};
 
-    // --- СЛОВАРЬ ПЕРЕВОДОВ ---
-    const dict = {
-        en: {
-            navDash: "Dashboard", navPort: "Portfolio", navAnal: "Analytics", navSet: "Settings",
-            addPie: "+ Add Pie", addAsset: "+ Add Asset", distAssets: "Distribute Assets", search: "Search assets by name or category...",
-            marketPulse: "Market Pulse", insight: "Smart Insight", perf: "Performance",
-            totBal: "Total Balance", profInfo: "Profile Information", upProf: "Update Profile",
-            promo: "Promo Code", apply: "Apply", prefs: "Preferences", light: "Light Theme", curr: "Default Currency", lang: "Language",
-            danger: "Danger Zone", clear: "Clear All Data"
-        },
-        ru: {
-            navDash: "Дашборд", navPort: "Портфель", navAnal: "Аналитика", navSet: "Настройки",
-            addPie: "+ Создать пирог", addAsset: "+ Добавить актив", distAssets: "Распределить активы", search: "Поиск активов по имени...",
-            marketPulse: "Пульс рынка", insight: "Умный Анализ", perf: "Доходность",
-            totBal: "Общий Баланс", profInfo: "Профиль", upProf: "Обновить профиль",
-            promo: "Промокод", apply: "Применить", prefs: "Параметры", light: "Светлая тема", curr: "Валюта", lang: "Язык",
-            danger: "Опасная зона", clear: "Стереть все данные"
-        }
-    };
+    // --- УМНЫЙ АВТО-ПЕРЕВОДЧИК ВСЕХ ЭЛЕМЕНТОВ ---
+    function translateApp() {
+        const lang = window.appState.lang || 'en';
+        const isRu = lang === 'ru';
+        
+        // Массив всех фраз: [Английский, Русский]
+        const map = [
+            ["Dashboard", "Дашборд"], ["Portfolio", "Портфель"], ["Analytics", "Аналитика"], ["Settings", "Настройки"], ["Account", "Аккаунт"],
+            ["Total Balance", "Общий баланс"], ["Create New Entry", "Добавить актив"], ["Asset Name", "Название"], ["Total Amount", "Сумма"],
+            ["Value", "Оценка"], ["Actions", "Действия"], ["Details", "График"], ["Recommendations", "Метки"], ["Update Value", "Изменить цену"],
+            ["Save Value", "Сохранить"], ["Update", "Обновить"], ["Distribute Assets", "Распределить"], ["All Asset Names", "Все активы"],
+            ["All Categories", "Все категории"], ["Create New Pie", "Новый пирог"], ["Add Asset to Pie", "Добавить в пирог"], ["Confirm", "Подтвердить"],
+            ["Cancel", "Отмена"], ["Close", "Закрыть"], ["Breakdown", "Структура"], ["Market Pulse", "Пульс рынка"], ["Smart Insight", "Умный Анализ"],
+            ["Performance", "Доходность"], ["Portfolio Value", "Стоимость портфеля"], ["Overall Gain/Loss", "Прибыль/Убыток"], 
+            ["Best Performer", "Лучший рост"], ["Worst Performer", "Худшее падение"], ["Total Portfolio Performance", "График доходности"],
+            ["Asset Performance", "Доходность активов"], ["Asset", "Актив"], ["Category", "Категория"], ["Change ($)", "Изм. ($)"], ["Change (%)", "Изм. (%)"],
+            ["Upgrade Your Plan", "Улучшить тариф"], ["Choose Plan", "Выбрать"], ["Best Value", "Лучший выбор"], ["Profile Information", "Ваш профиль"],
+            ["Full Name", "Полное имя"], ["Email Address", "Email"], ["Update Profile", "Сохранить профиль"], ["Promo Code", "Промокод"], ["Apply", "Применить"],
+            ["Preferences", "Параметры"], ["Light Theme", "Светлая тема"], ["Default Currency", "Валюта"], ["Language", "Язык интерфейса"], 
+            ["Weekly Summary", "Отчет за неделю"], ["Danger Zone", "Опасная зона"], ["Clear All Data", "Стереть все"], 
+            ["Performance Graph", "Изменение цены"], ["Quick Labels", "Быстрые метки"], ["+ Add Pie", "+ Создать пирог"], ["+ Add Asset", "+ Добавить"]
+        ];
 
-    function applyTranslations(lang) {
-        const t = dict[lang] || dict.en;
-        
-        // Меню
-        const nd = document.querySelector('.nav-item[data-page="main"] .nav-text'); if(nd) nd.textContent = t.navDash;
-        const np = document.querySelector('.nav-item[data-page="portfolio"] .nav-text'); if(np) np.textContent = t.navPort;
-        const na = document.querySelector('.nav-item[data-page="analytics"] .nav-text'); if(na) na.textContent = t.navAnal;
-        const ns = document.querySelector('.nav-item[data-page="settings"] .nav-text'); if(ns) ns.textContent = t.navSet;
-        
-        // Заголовки страниц
-        const mh = document.getElementById('main-header'); if(mh) mh.textContent = t.navDash;
-        const ph = document.querySelector('#page-portfolio h1'); if(ph) ph.textContent = t.navPort;
-        const ah = document.querySelector('#page-analytics h1'); if(ah) ah.textContent = t.navAnal;
-        const sh = document.querySelector('#page-settings h1'); if(sh) sh.textContent = t.navSet;
-        
-        // Кнопки
-        const ap = document.getElementById('openAddPieModal'); if(ap) ap.textContent = t.addPie;
-        const aa = document.getElementById('openAddAssetModal'); if(aa) aa.textContent = t.addAsset;
-        const up = document.querySelector('.add-row .white-btn'); if(up) up.textContent = t.distAssets;
-        if(updateProfileBtn) updateProfileBtn.textContent = t.upProf;
-        if(applyPromoBtn) applyPromoBtn.textContent = t.apply;
-        if(clearDataBtn) clearDataBtn.textContent = t.clear;
+        // 1. Ищем и переводим все текстовые блоки
+        const selectors = 'h1, h2, h3, h4, span, b, .nav-text, th, td, .white-btn, .det-btn, .rec-btn, .tag-white, .card-label, label, .stat-label, .pulse-name';
+        document.querySelectorAll(selectors).forEach(el => {
+            el.childNodes.forEach(node => {
+                if (node.nodeType === 3) { // Обрабатываем только текст, не ломая HTML/SVG
+                    let text = node.nodeValue.trim();
+                    if (!text) return;
+                    
+                    map.forEach(([en, ru]) => {
+                        if (isRu && text === en) node.nodeValue = node.nodeValue.replace(en, ru);
+                        else if (!isRu && text === ru) node.nodeValue = node.nodeValue.replace(ru, en);
+                    });
 
-        // Поля ввода
-        const s1 = document.getElementById('portfolioSearch'); if(s1) s1.placeholder = t.search;
-        const s2 = document.getElementById('analyticsSearch'); if(s2) s2.placeholder = t.search;
+                    // Динамические составные тексты (Категория: Имя)
+                    if (isRu && text.startsWith("Category: ")) node.nodeValue = text.replace("Category: ", "Категория: ");
+                    if (!isRu && text.startsWith("Категория: ")) node.nodeValue = text.replace("Категория: ", "Category: ");
+                    if (isRu && text.startsWith("Set Value for ")) node.nodeValue = text.replace("Set Value for ", "Цена для ");
+                    if (!isRu && text.startsWith("Цена для ")) node.nodeValue = text.replace("Цена для ", "Set Value for ");
+                }
+            });
+        });
 
-        // Настройки
-        const pTitles = document.querySelectorAll('#page-settings .card-title');
-        if(pTitles[0]) pTitles[0].textContent = t.profInfo;
-        if(pTitles[1]) pTitles[1].textContent = t.promo;
-        if(pTitles[2]) pTitles[2].textContent = t.prefs;
-        if(pTitles[3]) pTitles[3].textContent = t.danger;
+        // 2. Переводим плейсхолдеры в полях ввода
+        const placeholders = [
+            ['#portfolioSearch', "Search assets by name or category...", "Поиск активов и категорий..."],
+            ['#analyticsSearch', "Search analytics by asset or category...", "Поиск в аналитике..."],
+            ['#newAssetName', "Asset Name", "Название актива"],
+            ['#newAssetAmount', "Total Amount (Limit)", "Сумма (Лимит)"],
+            ['#new-pie-name', "Pie Name (e.g., My Portfolio)", "Имя (напр. Мой портфель)"],
+            ['#promo-code-input', "Enter your code", "Введите код"],
+            ['.custom-tag-input[placeholder="+ add category"]', "+ add category", "+ категория"],
+            ['.custom-tag-input[placeholder="+ sub-tag"]', "+ sub-tag", "+ метка"],
+            ['.custom-tag-input[placeholder="New Value"]', "New Value", "Новая цена"]
+        ];
         
-        const l1 = document.querySelector('.i18n-currency'); if(l1) l1.textContent = t.curr;
-        const l2 = document.querySelector('.i18n-language'); if(l2) l2.textContent = t.lang;
-        const l3 = document.querySelector('.setting-text span'); if(l3 && l3.textContent.includes('Theme')) l3.textContent = t.light;
+        placeholders.forEach(([sel, en, ru]) => {
+            document.querySelectorAll(sel).forEach(el => el.placeholder = isRu ? ru : en);
+        });
+
+        // Длинные описания
+        const d1 = document.querySelector('.subscriptions-header p'); if(d1) d1.textContent = isRu ? 'Получите доступ к продвинутой аналитике.' : 'Get access to exclusive analytics and portfolio tracking features.';
+        const d2 = document.querySelector('.setting-text p'); if(d2 && d2.textContent.includes('interface')) d2.textContent = isRu ? 'Включить светлый интерфейс.' : 'Switch to light mode interface.';
     }
 
+    // --- СЛЕДИМ ЗА НОВЫМИ ЭЛЕМЕНТАМИ ---
+    // Этот код запускает переводчик каждый раз, когда на странице появляются новые окна или активы
+    let isTranslating = false;
+    const observer = new MutationObserver(() => {
+        if(isTranslating) return;
+        isTranslating = true;
+        translateApp();
+        isTranslating = false;
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // --- БАЗОВЫЕ НАСТРОЙКИ ---
     function applyTheme(theme) {
         if (theme === 'light') {
             document.documentElement.setAttribute('data-theme', 'light');
@@ -1354,7 +1374,6 @@ document.addEventListener('DOMContentLoaded', () => {
             customName: savedSettings.customName || null
         };
         
-        // Синхронизируем с глобальным объектом
         window.appState.currency = settings.currency;
         window.appState.lang = settings.lang;
 
@@ -1364,7 +1383,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(themeToggle) themeToggle.checked = settings.theme === 'light';
         
         applyTheme(settings.theme);
-        applyTranslations(settings.lang);
+        translateApp(); // Первичный перевод
 
         if (settings.customName) {
             if(fullNameInput) fullNameInput.value = settings.customName;
@@ -1379,17 +1398,13 @@ document.addEventListener('DOMContentLoaded', () => {
         await AppStorage.set('appSettings', JSON.stringify(settings));
     }
 
-    // --- ОБНОВЛЕНИЕ ВАЛЮТЫ И ЯЗЫКА ---
     if(currencySelect) {
         currencySelect.addEventListener('change', async () => {
             settings.currency = currencySelect.value;
             window.appState.currency = settings.currency;
             await saveSettings();
-            
-            // Заставляем страницы перерисоваться с новой валютой
             if(typeof renderMainPage === 'function') renderMainPage();
             if(typeof updateDashboard === 'function') updateDashboard();
-            
             if(window.showToast) showToast(settings.lang === 'ru' ? 'Валюта обновлена!' : 'Currency updated!', 'success');
         });
     }
@@ -1398,24 +1413,23 @@ document.addEventListener('DOMContentLoaded', () => {
         languageSelect.addEventListener('change', async () => {
             settings.lang = languageSelect.value;
             window.appState.lang = settings.lang;
-            applyTranslations(settings.lang);
+            translateApp(); // Моментально переводим
             await saveSettings();
             if(window.showToast) showToast(settings.lang === 'ru' ? 'Язык изменен!' : 'Language updated!', 'success');
         });
     }
 
-    // --- ОСТАЛЬНЫЕ НАСТРОЙКИ ---
     if (updateProfileBtn && fullNameInput) {
         updateProfileBtn.addEventListener('click', async () => {
             const newName = fullNameInput.value.trim();
-            if (!newName) return window.showToast ? showToast('Error: Empty name', 'error') : alert('Error');
+            if (!newName) return window.showToast ? showToast('Error', 'error') : alert('Error');
             const profileNameEl = document.querySelector('.profile-name');
             if (profileNameEl) profileNameEl.textContent = newName;
             const sidebarAccountSpan = document.querySelector('.account-text');
             if (sidebarAccountSpan) sidebarAccountSpan.textContent = newName.split(' ')[0] || 'Account';
             settings.customName = newName;
             await saveSettings();
-            if(window.showToast) showToast(settings.lang === 'ru' ? 'Профиль обновлен!' : 'Profile updated!', 'success');
+            if(window.showToast) showToast(settings.lang === 'ru' ? 'Профиль сохранен!' : 'Profile updated!', 'success');
         });
     }
 
@@ -1424,12 +1438,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if(!promoCodeInput) return;
         const code = promoCodeInput.value.trim().toUpperCase();
         if (!code && !event) return; 
-        if (!code) return showToast ? showToast('Enter promo code', 'error') : alert('Error');
+        if (!code) return showToast ? showToast('Error', 'error') : alert('Error');
         
         if (['PRO100', 'SAVE20', 'SPECIAL'].includes(code)) {
-            if(window.showToast) showToast('Promo code applied!', 'success');
+            if(window.showToast) showToast(settings.lang === 'ru' ? 'Промокод применен!' : 'Promo code applied!', 'success');
         } else {
-            if(window.showToast) showToast('Invalid promo code.', 'error');
+            if(window.showToast) showToast(settings.lang === 'ru' ? 'Неверный код.' : 'Invalid promo code.', 'error');
         }
         promoCodeInput.value = '';
     }
