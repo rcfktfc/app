@@ -1130,21 +1130,25 @@ document.addEventListener('pageOpened', async (e) => {
 // === СТРАНИЦА SETTINGS (ПРОМОКОДЫ И НАСТРОЙКИ) ===
 // =================================================================
 document.addEventListener('DOMContentLoaded', () => {
-    const themeToggle = document.getElementById('theme-toggle'); // Добавили кнопку темы
+    const themeToggle = document.getElementById('theme-toggle');
     const currencySelect = document.getElementById('currency-select');
     const notificationToggles = document.querySelectorAll('.notification-toggle');
     const clearDataBtn = document.getElementById('clear-data-btn');
 
-    // Элементы для промокодов возвращены!
     const promoCodeInput = document.getElementById('promo-code-input');
     const applyPromoBtn = document.getElementById('apply-promo-btn');
+
+    // === НОВЫЕ ПЕРЕМЕННЫЕ ДЛЯ СМЕНЫ ИМЕНИ ===
+    const fullNameInput = document.getElementById('full-name');
+    // Ищем кнопку "Update Profile" (она единственная белая кнопка без id рядом с полем имени)
+    const updateProfileBtn = Array.from(document.querySelectorAll('#page-settings .white-btn')).find(btn => btn.textContent.includes('Update Profile'));
 
     let settings = {};
 
     function applyTheme(theme) {
         if (theme === 'light') {
             document.documentElement.setAttribute('data-theme', 'light');
-            localStorage.setItem('fimax_theme', 'light'); // Сохраняем локально
+            localStorage.setItem('fimax_theme', 'light');
         } else {
             document.documentElement.removeAttribute('data-theme');
             localStorage.setItem('fimax_theme', 'dark');
@@ -1156,22 +1160,58 @@ document.addEventListener('DOMContentLoaded', () => {
         settings = { 
             currency: savedSettings.currency || 'USD', 
             'notif-summary': savedSettings['notif-summary'] !== false,
-            theme: savedSettings.theme || localStorage.getItem('fimax_theme') || 'dark'
+            theme: savedSettings.theme || localStorage.getItem('fimax_theme') || 'dark',
+            customName: savedSettings.customName || null // <-- Добавили загрузку имени
         };
         
         if(currencySelect) currencySelect.value = settings.currency;
         if(notificationToggles) notificationToggles.forEach(toggle => { toggle.checked = settings[toggle.dataset.key]; });
-        
-        // Включаем тумблер, если тема светлая
         if(themeToggle) themeToggle.checked = settings.theme === 'light';
         applyTheme(settings.theme);
+
+        // === ЕСЛИ ЮЗЕР МЕНЯЛ ИМЯ РАНЕЕ, ПРИМЕНЯЕМ ЕГО ПОВЕРХ ДАННЫХ ИЗ TELEGRAM ===
+        if (settings.customName) {
+            if(fullNameInput) fullNameInput.value = settings.customName;
+            
+            const profileNameEl = document.querySelector('.profile-name');
+            if (profileNameEl) profileNameEl.textContent = settings.customName;
+            
+            const sidebarAccountSpan = document.querySelector('.account-text');
+            if (sidebarAccountSpan) sidebarAccountSpan.textContent = settings.customName.split(' ')[0] || 'Account';
+        }
     }
 
     async function saveSettings() {
         await AppStorage.set('appSettings', JSON.stringify(settings));
     }
 
-    // ЛОГИКА ПРОМОКОДОВ ВОЗВРАЩЕНА!
+    // === ЛОГИКА КНОПКИ UPDATE PROFILE ===
+    if (updateProfileBtn && fullNameInput) {
+        updateProfileBtn.addEventListener('click', async () => {
+            const newName = fullNameInput.value.trim();
+            if (!newName) {
+                alert('Please enter a valid name.');
+                return;
+            }
+
+            // 1. Меняем имя в большой карточке на странице Account
+            const profileNameEl = document.querySelector('.profile-name');
+            if (profileNameEl) profileNameEl.textContent = newName;
+
+            // 2. Меняем имя в боковом меню (берем только первое слово, чтобы не было слишком длинно)
+            const sidebarAccountSpan = document.querySelector('.account-text');
+            if (sidebarAccountSpan) {
+                sidebarAccountSpan.textContent = newName.split(' ')[0] || 'Account';
+            }
+
+            // 3. Сохраняем в облако (чтобы не сбрасывалось при перезапуске)
+            settings.customName = newName;
+            await saveSettings();
+
+            alert('✅ Profile name updated successfully!');
+        });
+    }
+
     function applyPromoCode() {
         if(!promoCodeInput) return;
         const code = promoCodeInput.value.trim().toUpperCase();
@@ -1214,12 +1254,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Подключаем слушатель на кнопку промокода
-    if(applyPromoBtn) {
-        applyPromoBtn.addEventListener('click', applyPromoCode);
-    }
+    if(applyPromoBtn) { applyPromoCode(); applyPromoBtn.addEventListener('click', applyPromoCode); }
     
-    // ДОБАВЛЕННЫЙ КОД: Слушатель нажатия на переключатель темы
     if(themeToggle) {
         themeToggle.addEventListener('change', async () => {
             settings.theme = themeToggle.checked ? 'light' : 'dark';
