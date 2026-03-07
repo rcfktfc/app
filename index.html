@@ -388,14 +388,26 @@
                                 </label>
                             </div>
                             
+                            <!-- Выбор валюты (добавлен Рубль) -->
                             <div class="setting-row">
-                                <span>Default Currency</span>
+                                <div class="setting-text"><span class="i18n-currency">Default Currency</span></div>
                                 <select class="custom-select" id="currency-select">
                                     <option value="USD">USD ($)</option>
                                     <option value="EUR">EUR (€)</option>
                                     <option value="GBP">GBP (£)</option>
+                                    <option value="RUB">RUB (₽)</option>
                                 </select>
                             </div>
+                            
+                            <!-- Выбор языка -->
+                            <div class="setting-row">
+                                <div class="setting-text"><span class="i18n-language">Language</span></div>
+                                <select class="custom-select" id="language-select">
+                                    <option value="en">English</option>
+                                    <option value="ru">Русский</option>
+                                </select>
+                            </div>
+                            
                             <div class="setting-row">
                                 <div class="setting-text"><span>Weekly Summary</span><p>Receive a summary of your portfolio performance.</p></div>
                                 <label class="toggle-switch">

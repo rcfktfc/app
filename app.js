@@ -90,6 +90,27 @@ window.AppStorage = {
 };
 
 // =================================================================
+// === ГЛОБАЛЬНЫЕ НАСТРОЙКИ ВАЛЮТЫ И ЯЗЫКА ===
+// =================================================================
+window.appState = {
+    lang: 'en',
+    currency: 'USD',
+    get currencySymbol() {
+        const map = { 'USD': '$', 'EUR': '€', 'GBP': '£', 'RUB': '₽' };
+        return map[this.currency] || '$';
+    }
+};
+
+window.formatMoney = function(val, showSign = false) {
+    if (typeof val !== 'number' || isNaN(val)) return showSign ? `+ ${window.appState.currencySymbol}0.00` : `${window.appState.currencySymbol}0.00`;
+    const sign = val >= 0 ? '+' : '-';
+    // Для рублей меняем формат отображения (пробел между тысячами)
+    const locale = window.appState.currency === 'RUB' ? 'ru-RU' : 'en-US';
+    const formatted = `${window.appState.currencySymbol}${Math.abs(val).toLocaleString(locale, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    return showSign ? `${sign} ${formatted}` : formatted;
+};
+
+// =================================================================
 // === КАСТОМНЫЕ УВЕДОМЛЕНИЯ (TOASTS) ===
 // =================================================================
 window.showToast = function(message, type = 'info') {
@@ -285,10 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function formatCurrency(value, showSign = false) {
-        if (typeof value !== 'number' || isNaN(value)) return showSign ? '+ $0.00' : '$0.00';
-        const sign = value >= 0 ? '+' : '-';
-        const formatted = `$${Math.abs(value).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        return showSign ? `${sign} ${formatted}` : formatted;
+        return window.formatMoney(value, showSign);
     }
 
     function formatDate(dateObj) {
@@ -770,7 +788,7 @@ function renderBreakdownList(assets) {
     const totalAmount = assets.reduce((s, a) => s + a.amount, 0);
     assets.forEach(asset => {
         const row = document.createElement('div'); row.className = 'asset-row'; row.id = `breakdown-row-${asset.id}`;
-        row.innerHTML = `<span class="asset-name"><span class="dot"></span> ${asset.name} (${asset.category})</span><b class="asset-val">$${asset.amount.toLocaleString()} <button class="delete-asset-btn" onclick="deleteAssetFromPie('${asset.id}')">✕</button></b>`;
+        row.innerHTML = `<span class="asset-name"><span class="dot"></span> ${asset.name} (${asset.category})</span><b class="asset-val">${window.appState.currencySymbol}${asset.amount.toLocaleString()} <button class="delete-asset-btn" onclick="deleteAssetFromPie('${asset.id}')">✕</button></b>`;
         row.onmouseenter = () => handleHover(document.getElementById(`sector-${asset.id}`), asset.amount, row.id, asset.category);
         row.onmouseleave = () => handleReset(document.getElementById(`sector-${asset.id}`), totalAmount, row.id);
         breakdownList.appendChild(row);
@@ -805,7 +823,7 @@ function getArcPath(radius, startAngle, endAngle) {
 }
 
 let currentAmountObj = { value: 0 };
-function animateValue(displayElement, targetValue) { gsap.to(currentAmountObj, { value: targetValue, duration: 0.6, ease: "power2.out", onUpdate: () => { displayElement.innerText = '$' + Math.floor(currentAmountObj.value).toLocaleString(); } }); }
+function animateValue(displayElement, targetValue) { gsap.to(currentAmountObj, { value: targetValue, duration: 0.6, ease: "power2.out", onUpdate: () => { displayElement.innerText = window.appState.currencySymbol + Math.floor(currentAmountObj.value).toLocaleString(); } }); }
 function handleHover(el, val, rowId, cat) { if (!el) return; animateValue(amountDisplay, val); hoverCategoryName.textContent = cat; document.getElementById(rowId)?.classList.add('highlight'); const sa = parseFloat(el.dataset.startAngle), ea = parseFloat(el.dataset.endAngle), mid = sa + (ea - sa) / 2, vec = polarToCartesian(8, mid); gsap.to(el, { x: vec.x, y: vec.y, duration: 0.4, ease: "power3.out", overwrite: true }); }
 function handleReset(el, total, rowId) { if (!el) return; animateValue(amountDisplay, total); hoverCategoryName.textContent = 'Total Balance'; document.getElementById(rowId)?.classList.remove('highlight'); gsap.to(el, { x: 0, y: 0, duration: 0.4, ease: "power3.out", overwrite: true }); }
 
@@ -986,8 +1004,8 @@ function updateDashboard() {
         }
     });
     
-    totalEl.textContent = `$${globalSum.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    
+    totalEl.textContent = window.formatMoney(globalSum);
+
     // Меняем заголовок в зависимости от выбранных фильтров
     let labelText = 'Total Balance';
     if (window.activeNameFilter && window.activeCategoryFilter) {
@@ -998,20 +1016,20 @@ function updateDashboard() {
         labelText = `${window.activeNameFilter} Total`;
     }
     if (totalLabel) totalLabel.textContent = labelText;
-    
+
     // Рисуем карточки (они отображают только те категории, которые актуальны для выбранного Name Filter)
-    if (Object.keys(catSums).length === 0) { 
-        catContainer.innerHTML = `<span style="color:#444; font-size:12px;">No active assets</span>`; 
-    } else { 
+    if (Object.keys(catSums).length === 0) {
+        catContainer.innerHTML = `<span style="color:#444; font-size:12px;">No active assets</span>`;
+    } else {
         catContainer.innerHTML = Object.keys(catSums).map(cat => {
             const isActive = window.activeCategoryFilter === cat;
             const opacity = (!window.activeCategoryFilter || isActive) ? '1' : '0.4';
             const border = isActive ? 'border: 1px solid rgba(255,255,255,0.5); transform: scale(1.02);' : '';
             return `<div class="stat-card" style="opacity: ${opacity}; ${border} cursor: pointer; transition: all 0.3s;" onclick="setCategoryFilter('${isActive ? '' : cat}')">
                 <span class="stat-label">${cat}</span>
-                <div class="stat-val">$${catSums[cat].toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                <div class="stat-val">${window.appState.currencySymbol}${catSums[cat].toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
             </div>`;
-        }).join(''); 
+        }).join('');
     }
 
     if (typeof updateFilterDropdown === 'function') updateFilterDropdown();
@@ -1241,23 +1259,80 @@ document.addEventListener('pageOpened', async (e) => {
 });
 
 // =================================================================
-// === СТРАНИЦА SETTINGS (ПРОМОКОДЫ И НАСТРОЙКИ) ===
+// === СТРАНИЦА SETTINGS (ПРОМОКОДЫ, НАСТРОЙКИ, ЯЗЫК, ВАЛЮТА) ===
 // =================================================================
 document.addEventListener('DOMContentLoaded', () => {
     const themeToggle = document.getElementById('theme-toggle');
     const currencySelect = document.getElementById('currency-select');
+    const languageSelect = document.getElementById('language-select');
     const notificationToggles = document.querySelectorAll('.notification-toggle');
     const clearDataBtn = document.getElementById('clear-data-btn');
 
     const promoCodeInput = document.getElementById('promo-code-input');
     const applyPromoBtn = document.getElementById('apply-promo-btn');
-
-    // === НОВЫЕ ПЕРЕМЕННЫЕ ДЛЯ СМЕНЫ ИМЕНИ ===
     const fullNameInput = document.getElementById('full-name');
-    // Ищем кнопку "Update Profile" (она единственная белая кнопка без id рядом с полем имени)
-    const updateProfileBtn = Array.from(document.querySelectorAll('#page-settings .white-btn')).find(btn => btn.textContent.includes('Update Profile'));
+    const updateProfileBtn = Array.from(document.querySelectorAll('#page-settings .white-btn')).find(btn => btn.textContent.includes('Update Profile') || btn.textContent.includes('Обновить профиль'));
 
     let settings = {};
+
+    // --- СЛОВАРЬ ПЕРЕВОДОВ ---
+    const dict = {
+        en: {
+            navDash: "Dashboard", navPort: "Portfolio", navAnal: "Analytics", navSet: "Settings",
+            addPie: "+ Add Pie", addAsset: "+ Add Asset", distAssets: "Distribute Assets", search: "Search assets by name or category...",
+            marketPulse: "Market Pulse", insight: "Smart Insight", perf: "Performance",
+            totBal: "Total Balance", profInfo: "Profile Information", upProf: "Update Profile",
+            promo: "Promo Code", apply: "Apply", prefs: "Preferences", light: "Light Theme", curr: "Default Currency", lang: "Language",
+            danger: "Danger Zone", clear: "Clear All Data"
+        },
+        ru: {
+            navDash: "Дашборд", navPort: "Портфель", navAnal: "Аналитика", navSet: "Настройки",
+            addPie: "+ Создать пирог", addAsset: "+ Добавить актив", distAssets: "Распределить активы", search: "Поиск активов по имени...",
+            marketPulse: "Пульс рынка", insight: "Умный Анализ", perf: "Доходность",
+            totBal: "Общий Баланс", profInfo: "Профиль", upProf: "Обновить профиль",
+            promo: "Промокод", apply: "Применить", prefs: "Параметры", light: "Светлая тема", curr: "Валюта", lang: "Язык",
+            danger: "Опасная зона", clear: "Стереть все данные"
+        }
+    };
+
+    function applyTranslations(lang) {
+        const t = dict[lang] || dict.en;
+        
+        // Меню
+        const nd = document.querySelector('.nav-item[data-page="main"] .nav-text'); if(nd) nd.textContent = t.navDash;
+        const np = document.querySelector('.nav-item[data-page="portfolio"] .nav-text'); if(np) np.textContent = t.navPort;
+        const na = document.querySelector('.nav-item[data-page="analytics"] .nav-text'); if(na) na.textContent = t.navAnal;
+        const ns = document.querySelector('.nav-item[data-page="settings"] .nav-text'); if(ns) ns.textContent = t.navSet;
+        
+        // Заголовки страниц
+        const mh = document.getElementById('main-header'); if(mh) mh.textContent = t.navDash;
+        const ph = document.querySelector('#page-portfolio h1'); if(ph) ph.textContent = t.navPort;
+        const ah = document.querySelector('#page-analytics h1'); if(ah) ah.textContent = t.navAnal;
+        const sh = document.querySelector('#page-settings h1'); if(sh) sh.textContent = t.navSet;
+        
+        // Кнопки
+        const ap = document.getElementById('openAddPieModal'); if(ap) ap.textContent = t.addPie;
+        const aa = document.getElementById('openAddAssetModal'); if(aa) aa.textContent = t.addAsset;
+        const up = document.querySelector('.add-row .white-btn'); if(up) up.textContent = t.distAssets;
+        if(updateProfileBtn) updateProfileBtn.textContent = t.upProf;
+        if(applyPromoBtn) applyPromoBtn.textContent = t.apply;
+        if(clearDataBtn) clearDataBtn.textContent = t.clear;
+
+        // Поля ввода
+        const s1 = document.getElementById('portfolioSearch'); if(s1) s1.placeholder = t.search;
+        const s2 = document.getElementById('analyticsSearch'); if(s2) s2.placeholder = t.search;
+
+        // Настройки
+        const pTitles = document.querySelectorAll('#page-settings .card-title');
+        if(pTitles[0]) pTitles[0].textContent = t.profInfo;
+        if(pTitles[1]) pTitles[1].textContent = t.promo;
+        if(pTitles[2]) pTitles[2].textContent = t.prefs;
+        if(pTitles[3]) pTitles[3].textContent = t.danger;
+        
+        const l1 = document.querySelector('.i18n-currency'); if(l1) l1.textContent = t.curr;
+        const l2 = document.querySelector('.i18n-language'); if(l2) l2.textContent = t.lang;
+        const l3 = document.querySelector('.setting-text span'); if(l3 && l3.textContent.includes('Theme')) l3.textContent = t.light;
+    }
 
     function applyTheme(theme) {
         if (theme === 'light') {
@@ -1273,23 +1348,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const savedSettings = JSON.parse(await AppStorage.get('appSettings')) || {};
         settings = { 
             currency: savedSettings.currency || 'USD', 
+            lang: savedSettings.lang || 'en',
             'notif-summary': savedSettings['notif-summary'] !== false,
             theme: savedSettings.theme || localStorage.getItem('fimax_theme') || 'dark',
-            customName: savedSettings.customName || null // <-- Добавили загрузку имени
+            customName: savedSettings.customName || null
         };
         
+        // Синхронизируем с глобальным объектом
+        window.appState.currency = settings.currency;
+        window.appState.lang = settings.lang;
+
         if(currencySelect) currencySelect.value = settings.currency;
+        if(languageSelect) languageSelect.value = settings.lang;
         if(notificationToggles) notificationToggles.forEach(toggle => { toggle.checked = settings[toggle.dataset.key]; });
         if(themeToggle) themeToggle.checked = settings.theme === 'light';
+        
         applyTheme(settings.theme);
+        applyTranslations(settings.lang);
 
-        // === ЕСЛИ ЮЗЕР МЕНЯЛ ИМЯ РАНЕЕ, ПРИМЕНЯЕМ ЕГО ПОВЕРХ ДАННЫХ ИЗ TELEGRAM ===
         if (settings.customName) {
             if(fullNameInput) fullNameInput.value = settings.customName;
-            
             const profileNameEl = document.querySelector('.profile-name');
             if (profileNameEl) profileNameEl.textContent = settings.customName;
-            
             const sidebarAccountSpan = document.querySelector('.account-text');
             if (sidebarAccountSpan) sidebarAccountSpan.textContent = settings.customName.split(' ')[0] || 'Account';
         }
@@ -1299,94 +1379,78 @@ document.addEventListener('DOMContentLoaded', () => {
         await AppStorage.set('appSettings', JSON.stringify(settings));
     }
 
-    // === ЛОГИКА КНОПКИ UPDATE PROFILE ===
+    // --- ОБНОВЛЕНИЕ ВАЛЮТЫ И ЯЗЫКА ---
+    if(currencySelect) {
+        currencySelect.addEventListener('change', async () => {
+            settings.currency = currencySelect.value;
+            window.appState.currency = settings.currency;
+            await saveSettings();
+            
+            // Заставляем страницы перерисоваться с новой валютой
+            if(typeof renderMainPage === 'function') renderMainPage();
+            if(typeof updateDashboard === 'function') updateDashboard();
+            
+            if(window.showToast) showToast(settings.lang === 'ru' ? 'Валюта обновлена!' : 'Currency updated!', 'success');
+        });
+    }
+
+    if(languageSelect) {
+        languageSelect.addEventListener('change', async () => {
+            settings.lang = languageSelect.value;
+            window.appState.lang = settings.lang;
+            applyTranslations(settings.lang);
+            await saveSettings();
+            if(window.showToast) showToast(settings.lang === 'ru' ? 'Язык изменен!' : 'Language updated!', 'success');
+        });
+    }
+
+    // --- ОСТАЛЬНЫЕ НАСТРОЙКИ ---
     if (updateProfileBtn && fullNameInput) {
         updateProfileBtn.addEventListener('click', async () => {
             const newName = fullNameInput.value.trim();
-            if (!newName) {
-                showToast('Please enter a valid name.', 'error');
-                return;
-            }
-
-            // 1. Меняем имя в большой карточке на странице Account
+            if (!newName) return window.showToast ? showToast('Error: Empty name', 'error') : alert('Error');
             const profileNameEl = document.querySelector('.profile-name');
             if (profileNameEl) profileNameEl.textContent = newName;
-
-            // 2. Меняем имя в боковом меню (берем только первое слово, чтобы не было слишком длинно)
             const sidebarAccountSpan = document.querySelector('.account-text');
-            if (sidebarAccountSpan) {
-                sidebarAccountSpan.textContent = newName.split(' ')[0] || 'Account';
-            }
-
-            // 3. Сохраняем в облако (чтобы не сбрасывалось при перезапуске)
+            if (sidebarAccountSpan) sidebarAccountSpan.textContent = newName.split(' ')[0] || 'Account';
             settings.customName = newName;
             await saveSettings();
-
-            showToast('Profile name updated successfully!', 'success');
+            if(window.showToast) showToast(settings.lang === 'ru' ? 'Профиль обновлен!' : 'Profile updated!', 'success');
         });
     }
 
     function applyPromoCode(event) {
-        // Предотвращаем любые странные срабатывания
         if (event) event.preventDefault();
-
         if(!promoCodeInput) return;
-        
         const code = promoCodeInput.value.trim().toUpperCase();
-        
-        // Если кто-то вызвал функцию без клика и поле пустое — игнорируем, не показываем ошибку
         if (!code && !event) return; 
-
-        if (!code) {
-            showToast('Please enter a promo code.', 'error');
-            return;
-        }
+        if (!code) return showToast ? showToast('Enter promo code', 'error') : alert('Error');
         
-        const validCodes = ['PRO100', 'SAVE20', 'SPECIAL'];
-        if (validCodes.includes(code)) {
-            showToast(`Promo code applied successfully!`, 'success');
+        if (['PRO100', 'SAVE20', 'SPECIAL'].includes(code)) {
+            if(window.showToast) showToast('Promo code applied!', 'success');
         } else {
-            showToast('Invalid promo code.', 'error');
+            if(window.showToast) showToast('Invalid promo code.', 'error');
         }
         promoCodeInput.value = '';
     }
 
-    // Привязываем жестко через onclick, чтобы избежать дублирования событий
-    if (applyPromoBtn) { 
-        applyPromoBtn.onclick = applyPromoCode; 
-    }
-
-    if(currencySelect) {
-        currencySelect.addEventListener('change', async () => {
-            settings.currency = currencySelect.value;
-            await saveSettings();
-        });
-    }
-
-    if(notificationToggles) {
-        notificationToggles.forEach(toggle => {
-            toggle.addEventListener('change', async () => {
-                settings[toggle.dataset.key] = toggle.checked;
-                await saveSettings();
-            });
-        });
-    }
-
-    if(clearDataBtn) {
-        clearDataBtn.addEventListener('click', async () => {
-            if (confirm('ARE YOU ABSOLUTELY SURE?\nThis will permanently delete your portfolio data from the Telegram Cloud. This action cannot be undone.')) {
-                await AppStorage.clearAll();
-                showToast('All your data has been cleared.', 'success');
-                location.reload();
-            }
-        });
-    }
-
+    if (applyPromoBtn) { applyPromoBtn.onclick = applyPromoCode; }
+    
     if(themeToggle) {
         themeToggle.addEventListener('change', async () => {
             settings.theme = themeToggle.checked ? 'light' : 'dark';
             applyTheme(settings.theme);
             await saveSettings();
+        });
+    }
+
+    if(clearDataBtn) {
+        clearDataBtn.addEventListener('click', async () => {
+            const msg = settings.lang === 'ru' ? 'ВЫ УВЕРЕНЫ?\nВсе данные будут удалены навсегда.' : 'ARE YOU ABSOLUTELY SURE?\nThis will permanently delete your data.';
+            if (confirm(msg)) {
+                await AppStorage.clearAll();
+                location.reload();
+            }
         });
     }
 
