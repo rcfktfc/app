@@ -1285,8 +1285,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if(applyPromoBtn) { applyPromoCode(); applyPromoBtn.addEventListener('click', applyPromoCode); }
-    
+    if(applyPromoBtn) { applyPromoBtn.addEventListener('click', applyPromoCode); }
+
     if(themeToggle) {
         themeToggle.addEventListener('change', async () => {
             settings.theme = themeToggle.checked ? 'light' : 'dark';
