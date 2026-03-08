@@ -193,15 +193,14 @@ window.showWeeklySummary = async function(isManual = false) {
             ? `📊 Мой портфель за неделю:\n💰 Баланс: ${window.formatMoney(totalCurrent)}\n${emoji} Изменение: ${sign}${window.formatMoney(diff, true)} (${sign}${percent.toFixed(2)}%)`
             : `📊 My Weekly Summary:\n💰 Balance: ${window.formatMoney(totalCurrent)}\n${emoji} Change: ${sign}${window.formatMoney(diff, true)} (${sign}${percent.toFixed(2)}%)`;
         
-        // 100% рабочий диплинк для Telegram
-        // Обрати внимание: url оставляем пустым, а текст передаем в text=
+        // Надежный диплинк для "Поделиться"
         const tgLink = `https://t.me/share/url?url=&text=${encodeURIComponent(text)}`;
         
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
-            // Вызываем нативное окно Telegram!
-            window.Telegram.WebApp.openTelegramLink(tgLink);
+        // Используем стандартный openLink, который безотказно работает во всех клиентах Telegram
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink) {
+            window.Telegram.WebApp.openLink(tgLink);
         } else {
-            // Если открыто в обычном браузере
+            // Фолбэк для обычного браузера
             window.open(tgLink, '_blank');
         }
         
