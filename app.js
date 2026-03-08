@@ -111,14 +111,24 @@ window.formatMoney = function(val, showSign = false) {
 };
 
 // =================================================================
-// === ГЕНЕРАТОР НЕДЕЛЬНОГО ОТЧЕТА ===
+// === ГЕНЕРАТОР НЕДЕЛЬНОГО ОТЧЕТА (ИСПРАВЛЕНО) ===
 // =================================================================
-window.showWeeklySummary = function(isManual = false) {
+window.showWeeklySummary = async function(isManual = false) {
     const isRu = window.appState && window.appState.lang === 'ru';
-    const historyData = window.portfolioDataMain ? window.portfolioDataMain.assetHistory : null;
+    
+    // НАДЕЖНЫЙ СПОСОБ: Берем данные напрямую из памяти/облака
+    let historyData = null;
+    try {
+        const rawData = await AppStorage.get('portfolioData');
+        if (rawData) {
+            historyData = JSON.parse(rawData).assetHistory;
+        }
+    } catch (e) {
+        console.error("Error loading data for summary:", e);
+    }
     
     if (!historyData || Object.keys(historyData).length === 0) {
-        if (isManual && window.showToast) window.showToast(isRu ? 'Нет данных для отчета' : 'No data for report', 'error');
+        if (isManual && window.showToast) window.showToast(isRu ? 'Нет данных для отчета. Добавьте активы.' : 'No data for report. Add some assets.', 'error');
         return;
     }
 
@@ -130,12 +140,18 @@ window.showWeeklySummary = function(isManual = false) {
     Object.keys(historyData).forEach(id => {
         const history = historyData[id];
         if (!history || history.length === 0) return;
+        
+        // Текущая цена актива
         totalCurrent += history[history.length - 1].value;
         
+        // Ищем цену 7 дней назад (или самую первую цену, если актив свежий)
         let val7DaysAgo = history[0].value; 
         for (let i = history.length - 1; i >= 0; i--) {
             const recordDate = new Date(history[i].date);
-            if (recordDate <= targetDate) { val7DaysAgo = history[i].value; break; }
+            if (recordDate <= targetDate) { 
+                val7DaysAgo = history[i].value; 
+                break; 
+            }
         }
         total7DaysAgo += val7DaysAgo;
     });
@@ -165,7 +181,9 @@ window.showWeeklySummary = function(isManual = false) {
 
     // Перекрашиваем главный текст для светлой/темной темы
     const themeText = content.querySelector('.theme-text');
-    themeText.style.color = document.documentElement.getAttribute('data-theme') === 'light' ? '#000' : '#fff';
+    if (themeText) {
+        themeText.style.color = document.documentElement.getAttribute('data-theme') === 'light' ? '#000' : '#fff';
+    }
 
     modal.classList.add('active');
 
@@ -175,13 +193,11 @@ window.showWeeklySummary = function(isManual = false) {
             ? `📊 Мой портфель за неделю:\n💰 Баланс: ${window.formatMoney(totalCurrent)}\n${emoji} Изменение: ${sign}${window.formatMoney(diff, true)} (${sign}${percent.toFixed(2)}%)`
             : `📊 My Weekly Summary:\n💰 Balance: ${window.formatMoney(totalCurrent)}\n${emoji} Change: ${sign}${window.formatMoney(diff, true)} (${sign}${percent.toFixed(2)}%)`;
         
-        // Отправляем данные боту
         if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.sendData) {
             try {
                 window.Telegram.WebApp.sendData(text);
-                window.Telegram.WebApp.close(); // Закрываем апп после отправки
+                window.Telegram.WebApp.close(); 
             } catch (e) {
-                // Если sendData недоступен, открываем окно "Поделиться"
                 window.open(`https://t.me/share/url?url=${encodeURIComponent(text)}`, '_blank');
             }
         } else {
@@ -949,7 +965,7 @@ window.addEventListener('load', async () => {
             const now = Date.now();
             // Если прошло 7 дней (7 * 24 * 60 * 60 * 1000)
             if (now - lastSummary > 604800000) {
-                window.showWeeklySummary(false);
+                await window.showWeeklySummary(false);
                 localStorage.setItem('fimax_last_summary', now.toString());
             }
         }
@@ -1643,10 +1659,10 @@ document.addEventListener('DOMContentLoaded', () => {
             toggle.addEventListener('change', async () => {
                 settings[toggle.dataset.key] = toggle.checked;
                 await saveSettings();
-                
+
                 // Если ты включил тумблер — сразу показываем отчет для проверки!
                 if (toggle.dataset.key === 'notif-summary' && toggle.checked) {
-                    if (window.showWeeklySummary) window.showWeeklySummary(true);
+                    if (window.showWeeklySummary) await window.showWeeklySummary(true);
                 }
             });
         });
