@@ -193,18 +193,19 @@ window.showWeeklySummary = async function(isManual = false) {
             ? `📊 Мой портфель за неделю:\n💰 Баланс: ${window.formatMoney(totalCurrent)}\n${emoji} Изменение: ${sign}${window.formatMoney(diff, true)} (${sign}${percent.toFixed(2)}%)`
             : `📊 My Weekly Summary:\n💰 Balance: ${window.formatMoney(totalCurrent)}\n${emoji} Change: ${sign}${window.formatMoney(diff, true)} (${sign}${percent.toFixed(2)}%)`;
         
-        // Правильный формат ссылки для Телеграма (используем text=, а не url=)
-        const shareLink = `https://t.me/share/url?text=${encodeURIComponent(text)}`;
+        // 100% рабочий диплинк для Telegram
+        // Обрати внимание: url оставляем пустым, а текст передаем в text=
+        const tgLink = `https://t.me/share/url?url=&text=${encodeURIComponent(text)}`;
         
-        // Используем нативный метод Телеграма для открытия ссылок внутри приложения
         if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
-            window.Telegram.WebApp.openTelegramLink(shareLink);
+            // Вызываем нативное окно Telegram!
+            window.Telegram.WebApp.openTelegramLink(tgLink);
         } else {
-            // Фолбэк для браузера
-            window.open(shareLink, '_blank');
+            // Если открыто в обычном браузере
+            window.open(tgLink, '_blank');
         }
         
-        // Закрываем модальное окно после клика
+        // Скрываем модалку
         document.getElementById('modalWeeklySummary').classList.remove('active');
     };
 };
