@@ -111,6 +111,87 @@ window.formatMoney = function(val, showSign = false) {
 };
 
 // =================================================================
+// === ГЕНЕРАТОР НЕДЕЛЬНОГО ОТЧЕТА ===
+// =================================================================
+window.showWeeklySummary = function(isManual = false) {
+    const isRu = window.appState && window.appState.lang === 'ru';
+    const historyData = window.portfolioDataMain ? window.portfolioDataMain.assetHistory : null;
+    
+    if (!historyData || Object.keys(historyData).length === 0) {
+        if (isManual && window.showToast) window.showToast(isRu ? 'Нет данных для отчета' : 'No data for report', 'error');
+        return;
+    }
+
+    let totalCurrent = 0, total7DaysAgo = 0;
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() - 7);
+
+    // Считаем баланс сейчас и 7 дней назад
+    Object.keys(historyData).forEach(id => {
+        const history = historyData[id];
+        if (!history || history.length === 0) return;
+        totalCurrent += history[history.length - 1].value;
+        
+        let val7DaysAgo = history[0].value; 
+        for (let i = history.length - 1; i >= 0; i--) {
+            const recordDate = new Date(history[i].date);
+            if (recordDate <= targetDate) { val7DaysAgo = history[i].value; break; }
+        }
+        total7DaysAgo += val7DaysAgo;
+    });
+
+    const diff = totalCurrent - total7DaysAgo;
+    const percent = total7DaysAgo > 0 ? (diff / total7DaysAgo) * 100 : 0;
+    const sign = diff >= 0 ? '+' : '';
+    const colorClass = diff >= 0 ? 'var(--profit-green)' : 'var(--loss-red)';
+    const emoji = diff >= 0 ? '📈' : '📉';
+
+    // Заполняем модальное окно данными
+    const modal = document.getElementById('modalWeeklySummary');
+    if (!modal) return;
+    
+    document.getElementById('ws-title').textContent = isRu ? '📅 Отчет за неделю' : '📅 Weekly Summary';
+    document.getElementById('ws-close').textContent = isRu ? 'Закрыть' : 'Close';
+    document.getElementById('ws-send').textContent = isRu ? 'В чат' : 'Send to Chat';
+
+    const content = document.getElementById('weekly-summary-content');
+    content.innerHTML = `
+        <div style="font-size: 36px; font-weight: 800; margin-bottom: 10px;" class="theme-text">${window.formatMoney(totalCurrent)}</div>
+        <div style="font-size: 18px; font-weight: 700; color: ${colorClass}; margin-bottom: 20px;">
+            ${emoji} ${sign}${window.formatMoney(diff, true)} (${sign}${percent.toFixed(2)}%)
+        </div>
+        <p>${isRu ? 'Это изменение вашего баланса за последние 7 дней.' : 'This is your balance change over the last 7 days.'}</p>
+    `;
+
+    // Перекрашиваем главный текст для светлой/темной темы
+    const themeText = content.querySelector('.theme-text');
+    themeText.style.color = document.documentElement.getAttribute('data-theme') === 'light' ? '#000' : '#fff';
+
+    modal.classList.add('active');
+
+    // Настраиваем кнопку отправки в чат
+    document.getElementById('send-summary-to-chat').onclick = () => {
+        const text = isRu 
+            ? `📊 Мой портфель за неделю:\n💰 Баланс: ${window.formatMoney(totalCurrent)}\n${emoji} Изменение: ${sign}${window.formatMoney(diff, true)} (${sign}${percent.toFixed(2)}%)`
+            : `📊 My Weekly Summary:\n💰 Balance: ${window.formatMoney(totalCurrent)}\n${emoji} Change: ${sign}${window.formatMoney(diff, true)} (${sign}${percent.toFixed(2)}%)`;
+        
+        // Отправляем данные боту
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.sendData) {
+            try {
+                window.Telegram.WebApp.sendData(text);
+                window.Telegram.WebApp.close(); // Закрываем апп после отправки
+            } catch (e) {
+                // Если sendData недоступен, открываем окно "Поделиться"
+                window.open(`https://t.me/share/url?url=${encodeURIComponent(text)}`, '_blank');
+            }
+        } else {
+            window.open(`https://t.me/share/url?url=${encodeURIComponent(text)}`, '_blank');
+        }
+        document.getElementById('modalWeeklySummary').classList.remove('active');
+    };
+};
+
+// =================================================================
 // === КАСТОМНЫЕ УВЕДОМЛЕНИЯ (TOASTS) ===
 // =================================================================
 window.showToast = function(message, type = 'info') {
@@ -859,6 +940,20 @@ window.addEventListener('load', async () => {
     await loadMainData();
     renderMainPage();
     gsap.from("#page-main .card", { duration: 1.2, y: 50, opacity: 0, stagger: 0.15, ease: "power4.out" });
+
+    // --- ПРОВЕРКА НЕДЕЛЬНОГО ОТЧЕТА ПРИ ВХОДЕ ---
+    setTimeout(async () => {
+        const settings = JSON.parse(await AppStorage.get('appSettings')) || {};
+        if (settings['notif-summary'] !== false) {
+            const lastSummary = parseInt(localStorage.getItem('fimax_last_summary')) || 0;
+            const now = Date.now();
+            // Если прошло 7 дней (7 * 24 * 60 * 60 * 1000)
+            if (now - lastSummary > 604800000) {
+                window.showWeeklySummary(false);
+                localStorage.setItem('fimax_last_summary', now.toString());
+            }
+        }
+    }, 1500); // Показываем красиво через полторы секунды после входа
 });
 
 document.addEventListener('pageOpened', async (e) => {
@@ -1540,6 +1635,20 @@ document.addEventListener('DOMContentLoaded', () => {
             settings.theme = themeToggle.checked ? 'light' : 'dark';
             applyTheme(settings.theme);
             await saveSettings();
+        });
+    }
+
+    if(notificationToggles) {
+        notificationToggles.forEach(toggle => {
+            toggle.addEventListener('change', async () => {
+                settings[toggle.dataset.key] = toggle.checked;
+                await saveSettings();
+                
+                // Если ты включил тумблер — сразу показываем отчет для проверки!
+                if (toggle.dataset.key === 'notif-summary' && toggle.checked) {
+                    if (window.showWeeklySummary) window.showWeeklySummary(true);
+                }
+            });
         });
     }
 
