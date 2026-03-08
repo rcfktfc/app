@@ -111,18 +111,15 @@ window.formatMoney = function(val, showSign = false) {
 };
 
 // =================================================================
-// === ГЕНЕРАТОР НЕДЕЛЬНОГО ОТЧЕТА (ИСПРАВЛЕНО) ===
+// === ГЕНЕРАТОР НЕДЕЛЬНОГО ОТЧЕТА ===
 // =================================================================
 window.showWeeklySummary = async function(isManual = false) {
     const isRu = window.appState && window.appState.lang === 'ru';
     
-    // НАДЕЖНЫЙ СПОСОБ: Берем данные напрямую из памяти/облака
     let historyData = null;
     try {
         const rawData = await AppStorage.get('portfolioData');
-        if (rawData) {
-            historyData = JSON.parse(rawData).assetHistory;
-        }
+        if (rawData) historyData = JSON.parse(rawData).assetHistory;
     } catch (e) {
         console.error("Error loading data for summary:", e);
     }
@@ -136,15 +133,12 @@ window.showWeeklySummary = async function(isManual = false) {
     const targetDate = new Date();
     targetDate.setDate(targetDate.getDate() - 7);
 
-    // Считаем баланс сейчас и 7 дней назад
     Object.keys(historyData).forEach(id => {
         const history = historyData[id];
         if (!history || history.length === 0) return;
         
-        // Текущая цена актива
         totalCurrent += history[history.length - 1].value;
         
-        // Ищем цену 7 дней назад (или самую первую цену, если актив свежий)
         let val7DaysAgo = history[0].value; 
         for (let i = history.length - 1; i >= 0; i--) {
             const recordDate = new Date(history[i].date);
@@ -162,13 +156,11 @@ window.showWeeklySummary = async function(isManual = false) {
     const colorClass = diff >= 0 ? 'var(--profit-green)' : 'var(--loss-red)';
     const emoji = diff >= 0 ? '📈' : '📉';
 
-    // Заполняем модальное окно данными
     const modal = document.getElementById('modalWeeklySummary');
     if (!modal) return;
     
     document.getElementById('ws-title').textContent = isRu ? '📅 Отчет за неделю' : '📅 Weekly Summary';
     document.getElementById('ws-close').textContent = isRu ? 'Закрыть' : 'Close';
-    document.getElementById('ws-send').textContent = isRu ? 'В чат' : 'Send to Chat';
 
     const content = document.getElementById('weekly-summary-content');
     content.innerHTML = `
@@ -179,34 +171,12 @@ window.showWeeklySummary = async function(isManual = false) {
         <p>${isRu ? 'Это изменение вашего баланса за последние 7 дней.' : 'This is your balance change over the last 7 days.'}</p>
     `;
 
-    // Перекрашиваем главный текст для светлой/темной темы
     const themeText = content.querySelector('.theme-text');
     if (themeText) {
         themeText.style.color = document.documentElement.getAttribute('data-theme') === 'light' ? '#000' : '#fff';
     }
 
     modal.classList.add('active');
-
-    // Настраиваем кнопку отправки в чат
-    document.getElementById('send-summary-to-chat').onclick = () => {
-        const text = isRu 
-            ? `📊 Мой портфель за неделю:\n💰 Баланс: ${window.formatMoney(totalCurrent)}\n${emoji} Изменение: ${sign}${window.formatMoney(diff, true)} (${sign}${percent.toFixed(2)}%)`
-            : `📊 My Weekly Summary:\n💰 Balance: ${window.formatMoney(totalCurrent)}\n${emoji} Change: ${sign}${window.formatMoney(diff, true)} (${sign}${percent.toFixed(2)}%)`;
-        
-        // Надежный диплинк для "Поделиться"
-        const tgLink = `https://t.me/share/url?url=&text=${encodeURIComponent(text)}`;
-        
-        // Используем стандартный openLink, который безотказно работает во всех клиентах Telegram
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink) {
-            window.Telegram.WebApp.openLink(tgLink);
-        } else {
-            // Фолбэк для обычного браузера
-            window.open(tgLink, '_blank');
-        }
-        
-        // Скрываем модалку
-        document.getElementById('modalWeeklySummary').classList.remove('active');
-    };
 };
 
 // =================================================================
