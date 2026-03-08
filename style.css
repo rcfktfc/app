@@ -2283,60 +2283,78 @@ input:focus, textarea:focus, select:focus, button:focus {
 
 
 /* ================================================================== */
-/* === АНИМАЦИЯ TELEGRAM STARS === */
+/* === ОРИГИНАЛЬНЫЕ TELEGRAM STARS И АНИМАЦИЯ === */
 /* ================================================================== */
 
 .plan-price {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px; /* Отступ между звездой и цифрой */
+    gap: 10px; /* Отступ от звезды до цифры */
 }
 
-.tg-star-wrapper {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    /* Добавляем легкий золотой ореол вокруг всей звезды */
-    filter: drop-shadow(0px 0px 8px rgba(255, 215, 0, 0.4));
+/* Контейнер для звезды (чтобы сделать красивый эффект блика) */
+.tg-star-icon {
+    width: 36px;
+    height: 36px;
+    /* Это качественная, вырезанная 3D-звезда из Telegram */
+    background-image: url('data:image/png;base64,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');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    
+    /* Добавляем мягкое свечение вокруг звезды */
+    filter: drop-shadow(0px 4px 10px rgba(255, 215, 0, 0.4));
+    
+    /* Анимация левитации (качается вверх-вниз) */
+    animation: star-levitate 3s ease-in-out infinite;
+    transform-origin: center;
 }
 
-.tg-star {
-    width: 100%;
-    height: 100%;
-    /* Запускаем бесконечную анимацию */
-    animation: star-pulse 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    transform-origin: center center;
+/* Ключевые кадры: звезда плавно парит вверх-вниз и немного меняет яркость */
+@keyframes star-levitate {
+    0% { transform: translateY(0) scale(1); filter: drop-shadow(0px 4px 10px rgba(255, 215, 0, 0.4)) brightness(1); }
+    50% { transform: translateY(-4px) scale(1.05); filter: drop-shadow(0px 8px 15px rgba(255, 215, 0, 0.6)) brightness(1.15); }
+    100% { transform: translateY(0) scale(1); filter: drop-shadow(0px 4px 10px rgba(255, 215, 0, 0.4)) brightness(1); }
 }
 
-/* Ключевые кадры: звезда плавно пульсирует, слегка вращается и переливается */
-@keyframes star-pulse {
-    0% {
-        transform: scale(1) rotate(0deg);
-        filter: brightness(1);
-    }
-    30% {
-        transform: scale(1.15) rotate(10deg);
-        filter: brightness(1.3);
-    }
-    60% {
-        transform: scale(0.95) rotate(-5deg);
-        filter: brightness(0.9);
-    }
-    100% {
-        transform: scale(1) rotate(0deg);
-        filter: brightness(1);
-    }
+/* Эффект при наведении на саму карточку тарифа */
+.pricing-card:hover .tg-star-icon {
+    /* При наведении звезда делает радостный прыжок-встряску */
+    animation: star-bounce 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
-/* При наведении на карточку тарифа звезда начинает крутиться быстрее! */
-.pricing-card:hover .tg-star {
-    animation: star-spin 1s linear infinite;
+@keyframes star-bounce {
+    0% { transform: scale(1) translateY(0); }
+    40% { transform: scale(1.2) translateY(-8px) rotate(5deg); filter: brightness(1.3); }
+    60% { transform: scale(0.95) translateY(2px) rotate(-5deg); }
+    80% { transform: scale(1.05) translateY(-2px); }
+    100% { transform: scale(1) translateY(0) rotate(0deg); }
 }
 
-@keyframes star-spin {
-    0% { transform: scale(1.1) rotate(0deg); filter: brightness(1.2); }
-    100% { transform: scale(1.1) rotate(360deg); filter: brightness(1.2); }
+/* Делаем саму цифру цены градиентной, чтобы она сочеталась со звездой */
+.plan-price {
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    margin: 20px 0;
+    /* Убираем старый цвет текста и ставим градиент */
+    background: linear-gradient(135deg, #ffffff 0%, #d1d1d6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Возвращаем цвет тексту "/ month" */
+.price-period {
+    -webkit-text-fill-color: var(--text-sec); /* Возвращаем серый цвет подписи */
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: normal;
+}
+
+/* Фикс светлой темы для цены */
+[data-theme="light"] .plan-price {
+    background: linear-gradient(135deg, #000000 0%, #555555 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
