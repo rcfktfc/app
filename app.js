@@ -1434,14 +1434,23 @@ document.addEventListener('DOMContentLoaded', () => {
             ["Save Value", "Сохранить"], ["Update", "Обновить"], ["All Asset Names", "Все активы"],
             ["All Categories", "Все категории"], ["Create New Pie", "Новый пирог"], ["Add Asset to Pie", "Добавить в пирог"], ["Confirm", "Подтвердить"],
             ["Cancel", "Отмена"], ["Close", "Закрыть"], ["Breakdown", "Структура"], ["Market Pulse", "Пульс рынка"], ["Smart Insight", "Умный Анализ"],
-            ["Performance", "Доходность"], ["Portfolio Value", "Стоимость портфеля"], ["Overall Gain/Loss", "Прибыль/Убыток"], 
+            ["Performance", "Доходность"], ["Portfolio Value", "Стоимость портфеля"], ["Overall Gain/Loss", "Прибыль/Убыток"],
             ["Best Performer", "Лучший рост"], ["Worst Performer", "Худшее падение"], ["Total Portfolio Performance", "График доходности"],
             ["Asset Performance", "Доходность активов"], ["Asset", "Актив"], ["Category", "Категория"], ["Change ($)", "Изм. ($)"], ["Change (%)", "Изм. (%)"],
             ["Upgrade Your Plan", "Улучшить тариф"], ["Choose Plan", "Выбрать"], ["Best Value", "Лучший выбор"], ["Profile Information", "Ваш профиль"],
             ["Full Name", "Полное имя"], ["Email Address", "Email"], ["Promo Code", "Промокод"],
-            ["Preferences", "Параметры"], ["Light Theme", "Светлая тема"], ["Default Currency", "Валюта"], ["Language", "Язык интерфейса"], 
+            ["Preferences", "Параметры"], ["Light Theme", "Светлая тема"], ["Default Currency", "Валюта"], ["Language", "Язык интерфейса"],
             ["Weekly Summary", "Отчет за неделю"], ["Danger Zone", "Опасная зона"],
-            ["Performance Graph", "Изменение цены"], ["Quick Labels", "Быстрые метки"]
+            ["Performance Graph", "Изменение цены"], ["Quick Labels", "Быстрые метки"],
+            ["Start your 7-Day Free Trial", "Начни 7 дней бесплатно"],
+            ["Get access to exclusive analytics. Cancel anytime.", "Полный доступ к аналитике. Отмена в любой момент."],
+            ["1 Month", "1 Месяц"],
+            ["6 Months", "6 Месяцев"],
+            ["1 Year", "1 Год"],
+            ["/ month", "/ месяц"],
+            ["/ 6 months", "/ 6 мес."],
+            ["/ year", "/ год"],
+            ["✓ 7-Day Free Trial", "✓ 7 дней бесплатно"]
         ];
 
         // 1. Обновляем базовые кнопки (только если текст реально изменился)
@@ -1649,6 +1658,37 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // === ЛОГИКА ОПЛАТЫ TELEGRAM STARS ===
+    document.querySelectorAll('.subscribe-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const plan = e.target.dataset.plan;
+            const stars = e.target.dataset.stars;
+            const isRu = window.appState && window.appState.lang === 'ru';
+            
+            // Если открыто внутри Телеграма
+            if (window.Telegram && window.Telegram.WebApp) {
+                // Вызываем красивое нативное системное окно Телеграма
+                window.Telegram.WebApp.showConfirm(
+                    isRu ? `Активировать 7 дней бесплатно, а затем оплатить ⭐️${stars}?` : `Start 7-day free trial, then pay ⭐️${stars}?`,
+                    (confirmed) => {
+                        if (confirmed) {
+                            if (window.Telegram.WebApp.sendData) {
+                                // Приложение закроется и отправит боту скрытую команду на создание чека
+                                const payload = JSON.stringify({ action: 'pay_stars', plan: plan, stars: stars });
+                                window.Telegram.WebApp.sendData(payload);
+                            } else {
+                                if(window.showToast) window.showToast(isRu ? 'Оплата доступна при запуске из меню бота' : 'Open via Bot Menu to pay', 'error');
+                            }
+                        }
+                    }
+                );
+            } else {
+                // Если открыли просто в браузере (Google Chrome, Safari)
+                if(window.showToast) window.showToast(isRu ? `Оплата ⭐️${stars} доступна только в приложении Telegram` : `Payment of ⭐️${stars} is only available in Telegram app`, 'error');
+            }
+        });
+    });
 
     loadSettings();
 });
