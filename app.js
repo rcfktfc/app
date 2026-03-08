@@ -273,19 +273,20 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateAnalyticsDropdowns() {
         const catListEl = document.getElementById('analyticsFilterCategoryList');
         const nameListEl = document.getElementById('analyticsFilterNameList');
+        const isRu = window.appState && window.appState.lang === 'ru';
         if(!catListEl || !nameListEl) return;
-        
+
         const uniqueCategories = [...new Set(Object.values(assetMeta).map(m => m.category))].filter(Boolean);
         const uniqueNames = [...new Set(Object.values(assetMeta).map(m => m.name))].filter(Boolean);
 
-        let nameHtml = `<button class="tag-white" style="width:100%; text-align:left; margin-bottom: 5px; background: ${window.analyticsNameFilter === null ? '#fff' : 'rgba(255,255,255,0.05)'} !important; color: ${window.analyticsNameFilter === null ? '#000' : '#fff'} !important; border: 1px solid var(--border);" onclick="setAnalyticsNameFilter('')">All Asset Names</button>`;
+        let nameHtml = `<button class="tag-white" style="width:100%; text-align:left; margin-bottom: 5px; background: ${window.analyticsNameFilter === null ? '#fff' : 'rgba(255,255,255,0.05)'} !important; color: ${window.analyticsNameFilter === null ? '#000' : '#fff'} !important; border: 1px solid var(--border);" onclick="setAnalyticsNameFilter('')">${isRu ? 'Все активы' : 'All Asset Names'}</button>`;
         uniqueNames.forEach(name => {
             const isActive = window.analyticsNameFilter === name;
             nameHtml += `<button class="tag-white" style="width:100%; text-align:left; margin-bottom: 5px; background: ${isActive ? '#fff' : 'rgba(255,255,255,0.05)'} !important; color: ${isActive ? '#000' : '#fff'} !important; border: 1px solid var(--border);" onclick="setAnalyticsNameFilter('${name}')">${name}</button>`;
         });
         nameListEl.innerHTML = nameHtml;
 
-        let catHtml = `<button class="tag-white" style="width:100%; text-align:left; margin-bottom: 5px; background: ${window.analyticsCategoryFilter === null ? '#fff' : 'rgba(255,255,255,0.05)'} !important; color: ${window.analyticsCategoryFilter === null ? '#000' : '#fff'} !important; border: 1px solid var(--border);" onclick="setAnalyticsCategoryFilter('')">All Categories</button>`;
+        let catHtml = `<button class="tag-white" style="width:100%; text-align:left; margin-bottom: 5px; background: ${window.analyticsCategoryFilter === null ? '#fff' : 'rgba(255,255,255,0.05)'} !important; color: ${window.analyticsCategoryFilter === null ? '#000' : '#fff'} !important; border: 1px solid var(--border);" onclick="setAnalyticsCategoryFilter('')">${isRu ? 'Все категории' : 'All Categories'}</button>`;
         uniqueCategories.forEach(cat => {
             const isActive = window.analyticsCategoryFilter === cat;
             catHtml += `<button class="tag-white" style="width:100%; text-align:left; margin-bottom: 5px; background: ${isActive ? '#fff' : 'rgba(255,255,255,0.05)'} !important; color: ${isActive ? '#000' : '#fff'} !important; border: 1px solid var(--border);" onclick="setAnalyticsCategoryFilter('${cat}')">${cat}</button>`;
@@ -879,6 +880,28 @@ async function saveDataToCloud() {
     try {
         const dataToSave = { assetHistory: portfolioAssetHistory, assetMeta: portfolioAssetMeta };
         await AppStorage.set('portfolioData', JSON.stringify(dataToSave));
+        
+        // --- НОВЫЙ КОД: Мгновенная синхронизация с Главной страницей ---
+        if (typeof portfolioDataMain !== 'undefined') {
+            portfolioDataMain.assetMeta = JSON.parse(JSON.stringify(portfolioAssetMeta));
+            portfolioDataMain.assetHistory = JSON.parse(JSON.stringify(portfolioAssetHistory));
+            
+            // Если мы удалили актив, нужно вычистить его из всех Пирогов
+            let piesChanged = false;
+            pies.forEach(pie => {
+                const originalLength = pie.assets.length;
+                pie.assets = pie.assets.filter(a => portfolioDataMain.assetMeta[a.id]);
+                if (pie.assets.length !== originalLength) {
+                    piesChanged = true;
+                    updatePieHistory(pie);
+                }
+            });
+            
+            if (piesChanged) await saveMainData();
+            
+            // Перерисовываем главную страницу в фоне
+            if (typeof renderMainPage === 'function') renderMainPage();
+        }
     } catch (e) { console.error("Ошибка сохранения в облако:", e); }
 }
 
@@ -948,14 +971,15 @@ function setNameFilter(name) {
 function updateFilterDropdown() {
     const catListEl = document.getElementById('filterCategoryList');
     const nameListEl = document.getElementById('filterNameList');
-    
+    const isRu = window.appState && window.appState.lang === 'ru';
+
     // Получаем уникальные категории и уникальные имена активов
     const uniqueCategories = [...new Set(Object.values(portfolioAssetMeta).map(m => m.category))].filter(Boolean);
     const uniqueNames = [...new Set(Object.values(portfolioAssetMeta).map(m => m.name))].filter(Boolean);
-    
+
     // --- ГЕНЕРАЦИЯ СПИСКА ИМЕН ---
     if (nameListEl) {
-        let nameHtml = `<button class="tag-white" style="width:100%; text-align:left; margin-bottom: 5px; background: ${window.activeNameFilter === null ? '#fff' : 'rgba(255,255,255,0.05)'} !important; color: ${window.activeNameFilter === null ? '#000' : '#fff'} !important; border: 1px solid var(--border);" onclick="setNameFilter('')">All Asset Names</button>`;
+        let nameHtml = `<button class="tag-white" style="width:100%; text-align:left; margin-bottom: 5px; background: ${window.activeNameFilter === null ? '#fff' : 'rgba(255,255,255,0.05)'} !important; color: ${window.activeNameFilter === null ? '#000' : '#fff'} !important; border: 1px solid var(--border);" onclick="setNameFilter('')">${isRu ? 'Все активы' : 'All Asset Names'}</button>`;
         uniqueNames.forEach(name => {
             const isActive = window.activeNameFilter === name;
             nameHtml += `<button class="tag-white" style="width:100%; text-align:left; margin-bottom: 5px; background: ${isActive ? '#fff' : 'rgba(255,255,255,0.05)'} !important; color: ${isActive ? '#000' : '#fff'} !important; border: 1px solid var(--border);" onclick="setNameFilter('${name}')">${name}</button>`;
@@ -965,7 +989,7 @@ function updateFilterDropdown() {
 
     // --- ГЕНЕРАЦИЯ СПИСКА КАТЕГОРИЙ ---
     if (catListEl) {
-        let catHtml = `<button class="tag-white" style="width:100%; text-align:left; margin-bottom: 5px; background: ${window.activeCategoryFilter === null ? '#fff' : 'rgba(255,255,255,0.05)'} !important; color: ${window.activeCategoryFilter === null ? '#000' : '#fff'} !important; border: 1px solid var(--border);" onclick="setCategoryFilter('')">All Categories</button>`;
+        let catHtml = `<button class="tag-white" style="width:100%; text-align:left; margin-bottom: 5px; background: ${window.activeCategoryFilter === null ? '#fff' : 'rgba(255,255,255,0.05)'} !important; color: ${window.activeCategoryFilter === null ? '#000' : '#fff'} !important; border: 1px solid var(--border);" onclick="setCategoryFilter('')">${isRu ? 'Все категории' : 'All Categories'}</button>`;
         uniqueCategories.forEach(cat => {
             const isActive = window.activeCategoryFilter === cat;
             catHtml += `<button class="tag-white" style="width:100%; text-align:left; margin-bottom: 5px; background: ${isActive ? '#fff' : 'rgba(255,255,255,0.05)'} !important; color: ${isActive ? '#000' : '#fff'} !important; border: 1px solid var(--border);" onclick="setCategoryFilter('${cat}')">${cat}</button>`;
@@ -1110,7 +1134,8 @@ function createAssetCard(catName, assetName, initialValue, amount, isInitialLoad
     const bento = document.getElementById('portfolioBento');
     if (!bento) return;
     const id = existingId || "asset-" + Math.floor(Math.random() * 1000000);
-    
+    const isRu = window.appState && window.appState.lang === 'ru';
+
     if (!isInitialLoad) {
         portfolioAssetHistory[id] = [{
             date: getTimestamp(),
@@ -1124,19 +1149,19 @@ function createAssetCard(catName, assetName, initialValue, amount, isInitialLoad
     const card = document.createElement('div');
     card.className = 'card';
     card.id = id;
-    
+
     // ИСПРАВЛЕНИЕ: Кнопка со старым дизайном (del-btn), но позиционированная сверху справа (pos-top-right)
     card.innerHTML = `
         <button class="del-btn pos-top-right" onclick="removeCard('${id}')" title="Delete Asset">✕</button>
-        
-        <h3 class="card-label" style="padding-right: 50px;">Category: ${catName}</h3>
+
+        <h3 class="card-label" style="padding-right: 50px;">${isRu ? 'Категория' : 'Category'}: ${catName}</h3>
         <table class="asset-table">
             <thead>
                 <tr>
-                    <th style="width: 35%">Asset Name</th>
-                    <th style="width: 20%">Value</th>
-                    <th style="width: 20%">Total Amount</th>
-                    <th style="width: 25%; text-align:right">Actions</th>
+                    <th style="width: 35%">${isRu ? 'Название' : 'Asset Name'}</th>
+                    <th style="width: 20%">${isRu ? 'Оценка' : 'Value'}</th>
+                    <th style="width: 20%">${isRu ? 'Сумма' : 'Total Amount'}</th>
+                    <th style="width: 25%; text-align:right">${isRu ? 'Действия' : 'Actions'}</th>
                 </tr>
             </thead>
             <tbody>
@@ -1149,38 +1174,38 @@ function createAssetCard(catName, assetName, initialValue, amount, isInitialLoad
                     <td><div class="amount-text" id="amount-display-${id}">${currentGroupTotal.toFixed(2)}</div></td>
                     <td>
                         <div class="actions-cell-content">
-                            <button class="det-btn" onclick="toggleDetails('${id}')">Details</button>
-                            
+                            <button class="det-btn" onclick="toggleDetails('${id}')">${isRu ? 'График' : 'Details'}</button>
+
                             <div class="rec-wrapper">
-                                <button class="rec-btn" onclick="event.stopPropagation(); toggleRecs('${id}')">Recommendations</button>
+                                <button class="rec-btn" onclick="event.stopPropagation(); toggleRecs('${id}')">${isRu ? 'Метки' : 'Recommendations'}</button>
                                 <div class="rec-popover" id="pop-${id}" onclick="event.stopPropagation()">
-                                    <span class="card-label">Quick Labels</span>
+                                    <span class="card-label">${isRu ? 'Быстрые метки' : 'Quick Labels'}</span>
                                     <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
                                         <button class="tag-white" onclick="addSubTag('${id}', 'HODL')">HODL</button>
                                         <button class="tag-white" onclick="addSubTag('${id}', 'High Risk')">High Risk</button>
                                     </div>
-                                    <input type="text" id="sub-tag-input-${id}" class="custom-tag-input" placeholder="+ sub-tag" onkeydown="handleSubTagInput(event, '${id}')">
+                                    <input type="text" id="sub-tag-input-${id}" class="custom-tag-input" placeholder="${isRu ? '+ метка' : '+ sub-tag'}" onkeydown="handleSubTagInput(event, '${id}')">
                                 </div>
                             </div>
-                            
+
                             <div class="rec-wrapper">
                                 <button class="edit-btn" onclick="event.stopPropagation(); toggleEdit('${id}')">✎</button>
                                 <div class="rec-popover" id="edit-pop-${id}" onclick="event.stopPropagation()">
-                                    <span class="card-label">Update Value</span>
-                                    <input type="number" id="edit-input-${id}" class="custom-tag-input" 
-                                           style="width:100%; margin-bottom:12px;" value="" placeholder="New Value"
+                                    <span class="card-label">${isRu ? 'Изменить цену' : 'Update Value'}</span>
+                                    <input type="number" id="edit-input-${id}" class="custom-tag-input"
+                                           style="width:100%; margin-bottom:12px;" value="" placeholder="${isRu ? 'Новая цена' : 'New Value'}"
                                            onkeydown="if(event.key === 'Enter') { event.preventDefault(); saveAssetEdit('${id}'); }">
-                                    <button class="tag-white" style="width:100%" onclick="saveAssetEdit('${id}')">Update</button>
+                                    <button class="tag-white" style="width:100%" onclick="saveAssetEdit('${id}')">${isRu ? 'Обновить' : 'Update'}</button>
                                 </div>
                             </div>
-                            
+
                         </div>
                     </td>
                 </tr>
                 <tr id="det-row-${id}" class="details-row">
                     <td colspan="4">
                         <div class="details-box">
-                            <span class="card-label">Performance Graph</span>
+                            <span class="card-label">${isRu ? 'Изменение цены' : 'Performance Graph'}</span>
                             <div class="graph-container" id="graph-${id}"></div>
                         </div>
                     </td>
@@ -1188,14 +1213,14 @@ function createAssetCard(catName, assetName, initialValue, amount, isInitialLoad
             </tbody>
         </table>
     `;
-    
+
     bento.appendChild(card);
-    
+
     if (!isInitialLoad) {
         gsap.from(card, { y: 20, opacity: 0, duration: 0.3 });
         updateAllGroupTotals(assetName);
     }
-    
+
     setTimeout(() => renderGraph(id), 100);
 }
 
