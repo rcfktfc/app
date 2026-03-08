@@ -193,16 +193,18 @@ window.showWeeklySummary = async function(isManual = false) {
             ? `📊 Мой портфель за неделю:\n💰 Баланс: ${window.formatMoney(totalCurrent)}\n${emoji} Изменение: ${sign}${window.formatMoney(diff, true)} (${sign}${percent.toFixed(2)}%)`
             : `📊 My Weekly Summary:\n💰 Balance: ${window.formatMoney(totalCurrent)}\n${emoji} Change: ${sign}${window.formatMoney(diff, true)} (${sign}${percent.toFixed(2)}%)`;
         
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.sendData) {
-            try {
-                window.Telegram.WebApp.sendData(text);
-                window.Telegram.WebApp.close(); 
-            } catch (e) {
-                window.open(`https://t.me/share/url?url=${encodeURIComponent(text)}`, '_blank');
-            }
+        // Правильный формат ссылки для Телеграма (используем text=, а не url=)
+        const shareLink = `https://t.me/share/url?text=${encodeURIComponent(text)}`;
+        
+        // Используем нативный метод Телеграма для открытия ссылок внутри приложения
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
+            window.Telegram.WebApp.openTelegramLink(shareLink);
         } else {
-            window.open(`https://t.me/share/url?url=${encodeURIComponent(text)}`, '_blank');
+            // Фолбэк для браузера
+            window.open(shareLink, '_blank');
         }
+        
+        // Закрываем модальное окно после клика
         document.getElementById('modalWeeklySummary').classList.remove('active');
     };
 };
